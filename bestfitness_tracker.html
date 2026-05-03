@@ -1,0 +1,2396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FitTracker">
+<meta name="theme-color" content="#0e0e0f">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230e0e0f'/><text y='.9em' font-size='70' x='15'>💪</text></svg>">
+
+<title>Fitness Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0e0f;--bg2:#161618;--bg3:#1e1e21;--bg4:#252529;--bg5:#2c2c31;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --text:#f0ede8;--text2:#8a877f;--text3:#5a5753;
+  --accent:#c8f060;--accent2:rgba(200,240,96,0.12);--accent3:rgba(200,240,96,0.06);
+  --blue:#60a8f0;--blue2:rgba(96,168,240,0.12);
+  --amber:#f0b860;--amber2:rgba(240,184,96,0.12);
+  --red:#f06080;--red2:rgba(240,96,128,0.12);
+  --teal:#60e8d8;--teal2:rgba(96,232,216,0.12);
+  --pink:#f060a8;--pink2:rgba(240,96,168,0.12);
+  --radius:12px;--radius-sm:8px
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:84px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:0.5px solid var(--border2);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;background:none;border:none;color:var(--text3);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:0.03em;transition:color 0.15s}
+.nav-btn.active{color:var(--accent)}
+.nav-icon{font-size:16px;line-height:1}
+
+/* PAGES */
+.page{display:none;padding:0 0 1rem}
+.page.active{display:block}
+
+/* HEADER */
+.page-header{padding:1rem 1rem 0.5rem;position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:0.5px solid var(--border)}
+.page-header h1{font-size:22px;font-weight:600;letter-spacing:-0.02em}
+.page-header .sub{font-size:12px;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace}
+
+/* WEEK TABS */
+.week-scroll{display:flex;gap:6px;padding:0.75rem 1rem;overflow-x:auto;scrollbar-width:none}
+.week-scroll::-webkit-scrollbar{display:none}
+.wtab{flex-shrink:0;padding:5px 14px;border-radius:20px;border:0.5px solid var(--border2);background:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.15s}
+.wtab.active{background:var(--accent);color:#0e0e0f;border-color:var(--accent);font-weight:500}
+
+/* METRIC CARDS */
+.metrics-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 1rem 0.75rem}
+.m-card{background:var(--bg3);border-radius:var(--radius-sm);padding:10px 10px 8px;border:0.5px solid var(--border)}
+.m-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;font-family:'DM Mono',monospace}
+.m-val{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-0.02em;font-family:'DM Mono',monospace}
+.m-unit{font-size:10px;color:var(--text3);margin-top:1px}
+
+/* TARGET BARS */
+.section-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;padding:0.75rem 1rem 0.4rem;font-family:'DM Mono',monospace}
+.target-row{padding:0 1rem;margin-bottom:6px}
+.t-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.t-name{font-size:13px;color:var(--text2)}
+.t-nums{font-size:11px;font-family:'DM Mono',monospace;color:var(--text3)}
+.t-track{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.t-fill{height:100%;border-radius:2px;transition:width 0.4s ease}
+
+/* DAY LOG */
+.log-wrap{padding:0 1rem}
+.log-day{background:var(--bg3);border-radius:var(--radius-sm);border:0.5px solid var(--border);margin-bottom:8px;overflow:hidden}
+.log-day.today{border-color:var(--accent)}
+.log-day-header{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;user-select:none}
+.log-day-date{font-size:13px;font-weight:500}
+.log-day-sub{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:1px}
+.tag{font-size:9px;padding:2px 7px;border-radius:20px;font-family:'DM Mono',monospace;font-weight:500;letter-spacing:0.04em}
+.tag-train{background:var(--accent2);color:var(--accent)}
+.tag-off{background:var(--bg4);color:var(--text3)}
+.tag-today{background:var(--blue2);color:var(--blue)}
+.log-fields{display:none;padding:0 12px 12px;border-top:0.5px solid var(--border)}
+.log-fields.open{display:block}
+.log-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.field-block label{display:block;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;font-family:'DM Mono',monospace}
+.field-block input{width:100%;background:var(--bg4);border:0.5px solid var(--border);border-radius:6px;padding:7px 10px;font-size:14px;color:var(--text);font-family:'DM Mono',monospace;outline:none;transition:border-color 0.15s}
+.field-block input:focus{border-color:var(--accent)}
+.field-block.full{grid-column:1/-1}
+
+/* SYNC BUTTON */
+.sync-btn{display:flex;align-items:center;gap:6px;margin:0 1rem 0.5rem;padding:9px 14px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--radius-sm);cursor:pointer;font-size:12px;color:var(--text2);font-family:'DM Mono',monospace;width:calc(100% - 2rem);justify-content:center;transition:all 0.15s}
+.sync-btn:hover{border-color:var(--accent);color:var(--accent)}
+.sync-btn.syncing{color:var(--amber);border-color:var(--amber2)}
+.sync-btn.success{color:var(--accent);border-color:var(--accent2)}
+.sync-btn.error{color:var(--red);border-color:var(--red2)}
+
+/* CHARTS */
+.charts-pad{padding:0 1rem}
+.chart-block{margin-bottom:1rem}
+.chart-block-title{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.chart-container{position:relative;width:100%;height:140px;background:var(--bg3);border-radius:var(--radius-sm);border:0.5px solid var(--border);padding:12px 8px 8px}
+
+/* ── TRAINING ── */
+.train-week-bar{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem 0.25rem}
+.twlabel{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.06em}
+.tw-btns{display:flex;gap:5px}
+.tw-btn{padding:4px 11px;border-radius:20px;border:0.5px solid var(--border2);background:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.15s}
+.tw-btn.active{background:var(--accent);color:#0e0e0f;border-color:var(--accent);font-weight:500}
+
+.train-day-card{margin:8px 1rem 0;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border);overflow:hidden}
+.train-day-header{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;cursor:pointer;user-select:none}
+.train-day-title{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.train-day-meta{font-size:11px;color:var(--text2);margin-top:2px;font-family:'DM Mono',monospace}
+.train-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace;font-weight:500}
+.train-body{display:none;border-top:0.5px solid var(--border)}
+.train-body.open{display:block}
+
+/* Exercise rows */
+.ex-block{border-bottom:0.5px solid var(--border)}
+.ex-block:last-child{border-bottom:none}
+.ex-header{display:flex;align-items:flex-start;justify-content:space-between;padding:11px 14px 9px;cursor:pointer;user-select:none}
+.ex-left{display:flex;gap:10px;align-items:flex-start;flex:1}
+.ex-num{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;min-width:20px;padding-top:2px}
+.ex-name{font-size:14px;font-weight:500}
+.ex-target{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:3px}
+.ex-done-summary{font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);margin-top:3px}
+.ex-chev{font-size:14px;color:var(--text3);transition:transform 0.2s;flex-shrink:0;padding-top:2px}
+
+/* Set logging */
+.set-area{display:none;padding:0 14px 12px}
+.set-area.open{display:block}
+.set-col-heads{display:grid;grid-template-columns:26px 1fr 1fr 30px;gap:6px;margin-bottom:5px}
+.set-col-heads span{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-family:'DM Mono',monospace;text-align:center}
+.set-row{display:grid;grid-template-columns:26px 1fr 1fr 30px;gap:6px;align-items:center;margin-bottom:5px}
+.set-badge{width:22px;height:22px;border-radius:50%;background:var(--bg5);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;flex-shrink:0}
+.set-inp{background:var(--bg4);border:0.5px solid var(--border);border-radius:6px;padding:6px 8px;font-size:13px;color:var(--text);font-family:'DM Mono',monospace;outline:none;width:100%;text-align:center;transition:border-color 0.15s}
+.set-inp:focus{border-color:var(--accent)}
+.set-inp.has-val{border-color:rgba(200,240,96,0.3);color:var(--accent)}
+.done-btn{width:26px;height:26px;border-radius:50%;border:0.5px solid var(--border2);background:none;color:var(--text3);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0}
+.done-btn.done{background:var(--accent2);border-color:var(--accent);color:var(--accent)}
+
+/* Progress bars */
+.prog-area{padding:0 14px 12px;border-top:0.5px solid var(--border)}
+.prog-label{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;padding-top:10px}
+.prog-cols{display:flex;gap:6px;align-items:flex-end;height:56px}
+.prog-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%}
+.prog-bar-wrap{flex:1;width:100%;background:var(--bg5);border-radius:3px;overflow:hidden;display:flex;align-items:flex-end}
+.prog-bar{width:100%;border-radius:3px;transition:height 0.35s ease;min-height:0}
+.prog-wk{font-size:9px;color:var(--text3);font-family:'DM Mono',monospace}
+.prog-val{font-size:9px;color:var(--text2);font-family:'DM Mono',monospace}
+
+/* ── NUTRITION / RECIPES ── */
+.macro-card{margin:0 1rem 10px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border);padding:14px}
+.macro-card-title{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px}
+.macro-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.macro-item{background:var(--bg4);border-radius:var(--radius-sm);padding:10px}
+.mi-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;font-family:'DM Mono',monospace}
+.mi-val{font-size:20px;font-weight:600;font-family:'DM Mono',monospace;margin:3px 0 1px}
+.mi-unit{font-size:10px;color:var(--text3)}
+.macro-full{grid-column:1/-1}
+.supp-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.supp-row:last-child{border-bottom:none}
+.supp-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.supp-name{flex:1;color:var(--text2)}
+.supp-dose{font-size:11px;font-family:'DM Mono',monospace;color:var(--text3)}
+
+/* Recipe cards */
+.recipe-tabs{display:flex;gap:6px;padding:0 1rem 0.5rem;overflow-x:auto;scrollbar-width:none}
+.recipe-tabs::-webkit-scrollbar{display:none}
+.rtab{flex-shrink:0;padding:5px 14px;border-radius:20px;border:0.5px solid var(--border2);background:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.15s}
+.rtab.active{background:var(--amber);color:#0e0e0f;border-color:var(--amber);font-weight:500}
+.recipe-panel{display:none}
+.recipe-panel.active{display:block}
+.recipe-card{margin:0 1rem 10px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border);overflow:hidden}
+.recipe-header{padding:13px 14px 10px;border-bottom:0.5px solid var(--border)}
+.recipe-name{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.recipe-sub{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:3px}
+.recipe-macros{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.rmac{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px}
+.rmac-cal{background:var(--accent2);color:var(--accent)}
+.rmac-p{background:var(--blue2);color:var(--blue)}
+.rmac-c{background:var(--amber2);color:var(--amber)}
+.rmac-f{background:var(--teal2);color:var(--teal)}
+.recipe-body{padding:12px 14px}
+.recipe-section{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-family:'DM Mono',monospace;margin-bottom:8px}
+.ing-row-wrap{border-bottom:0.5px solid var(--border)}
+.ing-row-wrap:last-child{border-bottom:none}
+.ing-main-row{display:flex;align-items:baseline;justify-content:space-between;padding:6px 0 3px}
+.ing-macro-row{display:flex;gap:5px;padding-bottom:6px;flex-wrap:wrap}
+.ing-mac{font-size:9px;font-family:"DM Mono",monospace;padding:1px 6px;border-radius:20px}
+.ing-mac-cal{background:var(--accent3);color:var(--accent)}
+.ing-mac-p{background:var(--blue2);color:var(--blue)}
+.ing-mac-c{background:var(--amber2);color:var(--amber)}
+.ing-mac-f{background:var(--teal2);color:var(--teal)}
+.ingredient-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:0.5px solid var(--border)}
+.ingredient-row:last-child{border-bottom:none}
+.ing-name{font-size:13px;color:var(--text2)}
+.ing-amt{font-size:12px;font-family:'DM Mono',monospace;color:var(--text3)}
+.recipe-note{font-size:12px;color:var(--text3);margin-top:10px;padding:8px 10px;background:var(--bg4);border-radius:var(--radius-sm);line-height:1.6}
+
+
+/* ── GROCERY LIST ── */
+.store-section{margin:0 1rem 12px}
+.store-header{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg3);border-radius:var(--radius) var(--radius) 0 0;border:0.5px solid var(--border);cursor:pointer;user-select:none}
+.store-title{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.store-sub{font-size:11px;color:var(--text2);font-family:"DM Mono",monospace;margin-top:2px}
+.store-chev{font-size:14px;color:var(--text3);transition:transform 0.2s}
+.store-body{border:0.5px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);overflow:hidden}
+.cat-header{padding:8px 14px;background:var(--bg4);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.07em;font-family:"DM Mono",monospace;border-bottom:0.5px solid var(--border)}
+.grocery-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:0.5px solid var(--border);cursor:pointer;user-select:none}
+.grocery-item:last-child{border-bottom:none}
+.grocery-cb{width:18px;height:18px;border-radius:4px;border:0.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.grocery-cb.checked{background:var(--accent);border-color:var(--accent)}
+.grocery-cb.checked::after{content:"✓";font-size:11px;color:#0e0e0f;font-weight:600}
+.g-name{flex:1;font-size:13px;color:var(--text2)}
+.g-name.checked{color:var(--text3);text-decoration:line-through}
+.g-store-badge{font-size:9px;font-family:"DM Mono",monospace;padding:2px 6px;border-radius:20px;background:var(--bg5);color:var(--text3)}
+.grocery-actions{display:flex;gap:8px;padding:0 1rem 1rem}
+.groc-btn{flex:1;padding:9px;border:0.5px solid var(--border2);border-radius:var(--radius-sm);background:none;color:var(--text2);font-size:12px;font-family:"DM Mono",monospace;cursor:pointer;transition:all 0.15s}
+.groc-btn:hover{border-color:var(--accent);color:var(--accent)}
+.groc-progress{height:3px;background:var(--bg4);margin:0 1rem 8px;border-radius:2px;overflow:hidden}
+.groc-progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.3s}
+.groc-count{font-size:11px;color:var(--text3);font-family:"DM Mono",monospace;text-align:center;padding:0 1rem 8px}
+
+/* ── MEAL CARDS ── */
+.meal-section-tabs{display:flex;gap:6px;padding:0 1rem 0.5rem;overflow-x:auto;scrollbar-width:none}
+.meal-section-tabs::-webkit-scrollbar{display:none}
+.mstab{flex-shrink:0;padding:5px 14px;border-radius:20px;border:0.5px solid var(--border2);background:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);cursor:pointer;transition:all 0.15s}
+.mstab.active{background:var(--pink);color:#0e0e0f;border-color:var(--pink);font-weight:500}
+.meal-panel{display:none}
+.meal-panel.active{display:block}
+.meal-card{margin:0 1rem 10px;background:var(--bg3);border-radius:var(--radius);border:0.5px solid var(--border);overflow:hidden}
+.meal-card-header{padding:13px 14px 10px;cursor:pointer;user-select:none;display:flex;align-items:flex-start;justify-content:space-between}
+.meal-card-left{}
+.meal-card-name{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+.meal-card-sub{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;margin-top:3px}
+.meal-badge-row{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.meal-badge{font-size:9px;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace;font-weight:500}
+.mb-home{background:var(--teal2);color:var(--teal)}
+.mb-prep{background:var(--amber2);color:var(--amber)}
+.mb-quick{background:var(--blue2);color:var(--blue)}
+.mb-train{background:var(--accent2);color:var(--accent)}
+.mb-off{background:rgba(240,96,168,0.12);color:var(--pink)}
+.mb-both{background:var(--bg5);color:var(--text2)}
+.meal-expand-icon{font-size:14px;color:var(--text3);transition:transform 0.2s;flex-shrink:0;margin-top:2px}
+.meal-body{display:none;border-top:0.5px solid var(--border)}
+.meal-body.open{display:block}
+.meal-macros-row{display:flex;gap:6px;padding:10px 14px 0;flex-wrap:wrap}
+.mmac{font-size:10px;font-family:'DM Mono',monospace;padding:3px 8px;border-radius:20px}
+.mmac-cal{background:var(--accent2);color:var(--accent)}
+.mmac-p{background:var(--blue2);color:var(--blue)}
+.mmac-c{background:var(--amber2);color:var(--amber)}
+.mmac-f{background:var(--teal2);color:var(--teal)}
+.meal-section-head{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-family:'DM Mono',monospace;padding:10px 14px 5px}
+.meal-ing-row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 14px;border-bottom:0.5px solid var(--border)}
+.meal-ing-row:last-of-type{border-bottom:none}
+.meal-ing-name{font-size:13px;color:var(--text2)}
+.meal-ing-amt{font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);text-align:right;max-width:45%}
+.meal-steps{padding:0 14px 4px}
+.meal-step{display:flex;gap:10px;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--text2);line-height:1.55}
+.meal-step:last-child{border-bottom:none}
+.step-num{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);min-width:18px;padding-top:2px}
+.meal-note-box{margin:0 14px 12px;padding:8px 10px;background:var(--bg4);border-radius:var(--radius-sm);font-size:12px;color:var(--text3);line-height:1.6}
+.meal-note-box strong{color:var(--text2);font-weight:500}
+.nutrient-highlights{display:flex;flex-wrap:wrap;gap:4px;padding:8px 14px 10px}
+.nh-pill{font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:20px;background:var(--bg5);color:var(--text3)}
+</style>
+</head>
+<body>
+
+<!-- TRACKER -->
+<div id="page-tracker" class="page active">
+  <div class="page-header">
+    <h1>Tracker</h1>
+    <div class="sub" id="tracker-sub">Week 1 · Apr 2026</div>
+  </div>
+  <div class="week-scroll" id="weekTabs"></div>
+  <div class="metrics-row" id="metricsGrid"></div>
+  <div class="section-label">Targets</div>
+  <div id="targetsSection"></div>
+  <div class="section-label">Daily log</div>
+  <div class="log-wrap" id="logWrap"></div>
+  <button class="sync-btn" id="calLogBtn" onclick="showCalLog()" style="margin-bottom:0">
+    <span>📋</span>
+    <span>Log today's calories (from Cronometer)</span>
+  </button>
+  <button class="sync-btn" id="syncBtn" onclick="syncToDrive()">
+    <span id="syncIcon">⇅</span>
+    <span id="syncText">Sync to Google Sheets</span>
+  </button>
+  <div class="section-label">This week — trends</div>
+  <div class="charts-pad">
+    <div class="chart-block"><div class="chart-block-title">Weight (lb)</div><div class="chart-container"><canvas id="wChart" role="img" aria-label="Weight trend"></canvas></div></div>
+    <div class="chart-block"><div class="chart-block-title">Calories</div><div class="chart-container"><canvas id="cChart" role="img" aria-label="Calorie trend"></canvas></div></div>
+    <div class="chart-block"><div class="chart-block-title">Steps</div><div class="chart-container"><canvas id="sChart" role="img" aria-label="Steps trend"></canvas></div></div>
+    <div class="chart-block"><div class="chart-block-title">Blood glucose</div><div class="chart-container"><canvas id="bChart" role="img" aria-label="BGL trend"></canvas></div></div>
+  </div>
+  <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;padding-right:1rem">
+    <span>Long-term — weight &amp; steps</span>
+    <div style="display:flex;gap:5px" id="ltRangeWrap">
+      <button class="wtab" id="ltBtn4w" onclick="setLtRange('4w')">4W</button>
+      <button class="wtab" id="ltBtn3m" onclick="setLtRange('3m')">3M</button>
+      <button class="wtab active" id="ltBtnAll" onclick="setLtRange('all')">All</button>
+    </div>
+  </div>
+  <div class="charts-pad">
+    <div class="chart-block">
+      <div class="chart-block-title" style="display:flex;justify-content:space-between">
+        <span>Weight (lb) — from HealthKit</span>
+        <span id="ltWtStat" style="color:var(--accent);font-family:'DM Mono',monospace;font-size:10px"></span>
+      </div>
+      <div class="chart-container" style="height:180px"><canvas id="ltWChart" role="img" aria-label="Long-term weight trend from HealthKit"></canvas></div>
+    </div>
+    <div class="chart-block">
+      <div class="chart-block-title" style="display:flex;justify-content:space-between">
+        <span>Steps / day — from HealthKit</span>
+        <span id="ltStStat" style="color:var(--amber);font-family:'DM Mono',monospace;font-size:10px"></span>
+      </div>
+      <div class="chart-container" style="height:180px"><canvas id="ltSChart" role="img" aria-label="Long-term steps trend from HealthKit"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRAINING -->
+<div id="page-training" class="page">
+  <div class="page-header">
+    <h1>Training</h1>
+    <div class="sub" id="train-sub">Week 1 · Ant/Post split</div>
+  </div>
+  <div class="train-week-bar">
+    <span class="twlabel">Week</span>
+    <div class="tw-btns" id="trainWeekBtns"></div>
+  </div>
+  <div id="trainCards" style="padding-bottom:0.5rem"></div>
+</div>
+
+<!-- NUTRITION -->
+<div id="page-nutrition" class="page">
+  <div class="page-header">
+    <h1>Nutrition</h1>
+    <div class="sub">Macros, recipes &amp; supplements</div>
+  </div>
+  <div style="height:0.75rem"></div>
+  <div id="nutritionContent"></div>
+</div>
+
+<div id="page-grocery" class="page">
+  <div class="page-header">
+    <h1>Grocery List</h1>
+    <div class="sub">Costco · Wegmans · Walmart</div>
+  </div>
+  <div style="height:0.75rem"></div>
+  <div id="groceryContent"></div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchPage('tracker',this)"><span class="nav-icon">◎</span>Tracker</button>
+  <button class="nav-btn" onclick="switchPage('training',this)"><span class="nav-icon">◈</span>Training</button>
+  <button class="nav-btn" onclick="switchPage('nutrition',this)"><span class="nav-icon">◇</span>Nutrition</button>
+  <button class="nav-btn" onclick="switchPage('grocery',this)"><span class="nav-icon">☰</span>Grocery</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ════════════════════════════════════════════════════════════
+//  DATA
+// ════════════════════════════════════════════════════════════
+const FILE_ID = '18LZYryLgDt-jKsouHZqhSffpO-x9riP2';
+
+const PLAN = [
+  {id:'torsoA',title:'Torso A',day:'Monday',type:'Chest · Back · Shoulders',color:'accent',
+   exercises:[
+    {id:'sAlp',  name:'Single Arm Lat Pulldown',       sets:3,reps:['6–8','8–12','12–20']},
+    {id:'hcRow', name:'Horiz. Chest Supported Row',    sets:3,reps:['6–8','8–12','12–20']},
+    {id:'incSm', name:'30° Incline Smith Press',       sets:2,reps:['5–7','8–12','12–15']},
+    {id:'macFly',name:'Machine Fly',                   sets:3,reps:['8–10','10–15','15–25']},
+    {id:'btnSp', name:'BTN Shoulder Press',            sets:3,reps:['4–6','6–10','10–15']},
+  ]},
+  {id:'limbsA',title:'Limbs A',day:'Tuesday',type:'Quads · Hams · Arms · Calves',color:'blue',
+   exercises:[
+    {id:'squat', name:'Heel Elevate Smith/Hack Squat', sets:2,reps:['3–5','5–8','8–12']},
+    {id:'legExt',name:'Leg Extension',                 sets:2,reps:['8–10','10–15','15–25']},
+    {id:'legCrl',name:'Seated/Lying Leg Curl',         sets:3,reps:['6–8','8–12','12–20']},
+    {id:'preaCl',name:'Machine Preacher Curl',         sets:2,reps:['6–8','8–12','12–20']},
+    {id:'revCrl',name:'EZ Bar Reverse Curl',           sets:2,reps:['6–8','8–12','12–20']},
+    {id:'triPd', name:'Long Rope Tricep Pushdown',     sets:3,reps:['6–8','8–12','12–20']},
+    {id:'calf1', name:'Standing Calf Raise',           sets:2,reps:['6–10','10–15','15–25']},
+  ]},
+  {id:'torsoB',title:'Torso B',day:'Thursday',type:'Chest · Back · Shoulders',color:'amber',
+   exercises:[
+    {id:'cnvPrs',name:'Converging Machine Chest Press',sets:2,reps:['5–7','8–12','12–15']},
+    {id:'loFly', name:'30° Lying Low-to-High Fly',     sets:2,reps:['8–10','10–15','15–25']},
+    {id:'wgLpd', name:'Wide Grip Lat Pulldown',        sets:3,reps:['6–8','8–12','12–20']},
+    {id:'tbar',  name:'T-Bar Row',                     sets:3,reps:['5–7','8–12','12–15']},
+    {id:'latRs', name:'Cable/Machine Lateral Raise',   sets:3,reps:['8–10','10–15','15–25']},
+  ]},
+  {id:'limbsB',title:'Limbs B',day:'Friday',type:'Hams · Glutes · Arms · Calves',color:'teal',
+   exercises:[
+    {id:'altCrl',name:'Alternating DB Curl',           sets:2,reps:['6–8','10–12','12–20']},
+    {id:'skull', name:'Skullcrusher',                  sets:3,reps:['5–7','8–12','12–20']},
+    {id:'sldl',  name:'Stiff Legged Deadlift',         sets:2,reps:['6–8','8–12','12–15']},
+    {id:'slLp',  name:'Single Leg Leg Press',          sets:2,reps:['6–8','8–12','12–20']},
+    {id:'hipTh', name:'Hip Thrust',                    sets:2,reps:['6–8','8–12','12–15']},
+    {id:'calf2', name:'Calf Raise on Leg Press',       sets:2,reps:['6–10','10–15','15–25']},
+    {id:'adduct',name:'Adductor Machine',              sets:1,reps:['6–10','10–15','15–25']},
+  ]},
+];
+
+const BADGE_STYLE={
+  accent:'background:var(--accent2);color:var(--accent)',
+  blue:'background:var(--blue2);color:var(--blue)',
+  amber:'background:var(--amber2);color:var(--amber)',
+  teal:'background:var(--teal2);color:var(--teal)',
+};
+const BAR_COL={accent:'#c8f060',blue:'#60a8f0',amber:'#f0b860',teal:'#60e8d8'};
+
+const SEED=[
+  {weight:null, cal:2200,steps:5801,mg:'',vol:null,bp:'',bgl:''},
+  {weight:null, cal:null, steps:5712,mg:'',vol:null,bp:'',bgl:''},
+  {weight:164.8,cal:2550,steps:6584,mg:'',vol:null,bp:'110/65',bgl:''},
+  {weight:164.8,cal:3500,steps:4972,mg:'',vol:null,bp:'102/66',bgl:''},
+  {weight:166.4,cal:3450,steps:5404,mg:'',vol:null,bp:'103/59',bgl:''},
+  {weight:166.2,cal:null, steps:null, mg:'',vol:null,bp:'',bgl:''},
+  {weight:null, cal:null, steps:null, mg:'',vol:null,bp:'',bgl:''},
+];
+const TRAIN_DAYS=[0,1,3,4]; // Mon=0,Tue=1,Thu=3,Fri=4
+
+// ════════════════════════════════════════════════════════════
+//  STORAGE
+// ════════════════════════════════════════════════════════════
+function ls(k,fb){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch(e){return fb}}
+function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+let tData=ls('fitV4',null);
+if(!tData) tData=Array.from({length:4},(_,wi)=>Array.from({length:7},(_,di)=>wi===0?{...SEED[di]}:{weight:null,cal:null,steps:null,mg:'',vol:null,bp:'',bgl:''}));
+
+let lData=ls('liftV2',{});
+function getLift(wk,sid,eid,si){return lData?.[wk]?.[sid]?.[eid]?.[si]||{weight:'',reps:'',done:false}}
+
+// ════════════════════════════════════════════════════════════
+//  SEED WEEK 1 LIFT DATA (if not already stored)
+// ════════════════════════════════════════════════════════════
+(function seedWeek1Lifts() {
+  const existing = ls('liftV2', null);
+  // Only seed if week 0 limbsA hasn't been filled in
+  if (existing && existing['0'] && existing['0']['limbsA'] && existing['0']['limbsA']['squat']) return;
+
+  const W = 0; // week index
+  function sl(sid, eid, si, w, r) {
+    if (!lData[W]) lData[W] = {};
+    if (!lData[W][sid]) lData[W][sid] = {};
+    if (!lData[W][sid][eid]) lData[W][sid][eid] = {};
+    lData[W][sid][eid][si] = {weight: w, reps: r, done: w !== ''};
+  }
+
+  // Tuesday — Limbs A
+  sl('limbsA','squat', 0,'115','5');  sl('limbsA','squat', 1,'125','4');
+  sl('limbsA','legExt',0,'160','12'); sl('limbsA','legExt',1,'170','10');
+  sl('limbsA','legCrl',0,'140','8');  sl('limbsA','legCrl',1,'145','6');
+  sl('limbsA','preaCl',0,'60','10');  sl('limbsA','preaCl',1,'70','');
+  sl('limbsA','revCrl',0,'50','12');  sl('limbsA','revCrl',1,'60','9');
+  sl('limbsA','triPd', 0,'100','8');  sl('limbsA','triPd', 1,'100','8');  sl('limbsA','triPd',2,'100','6');
+  sl('limbsA','calf1', 0,'200','10'); sl('limbsA','calf1', 1,'225','8');
+
+  // Thursday — Torso B
+  sl('torsoB','cnvPrs',0,'90','8');   sl('torsoB','cnvPrs',1,'95','6');
+  sl('torsoB','loFly', 0,'30','10');  sl('torsoB','loFly', 1,'30','10');
+  sl('torsoB','wgLpd', 0,'150','7');  sl('torsoB','wgLpd', 1,'150','6');  sl('torsoB','wgLpd',2,'150','6');
+  sl('torsoB','tbar',  0,'90','7');   sl('torsoB','tbar',  1,'100','7');  sl('torsoB','tbar', 2,'100','7');
+  sl('torsoB','latRs', 0,'85','9');   sl('torsoB','latRs', 1,'85','9');
+
+  // Friday — Limbs B
+  sl('limbsB','altCrl',0,'35','8');   sl('limbsB','altCrl',1,'35','8');
+  sl('limbsB','skull', 0,'70','10');  sl('limbsB','skull', 1,'80','5');   sl('limbsB','skull',2,'80','6');
+  sl('limbsB','sldl',  0,'185','');   sl('limbsB','sldl',  1,'205','7');
+  sl('limbsB','slLp',  0,'90','8');   sl('limbsB','slLp',  1,'115','8');
+  sl('limbsB','hipTh', 0,'115','8');  sl('limbsB','hipTh', 1,'115','8');
+  sl('limbsB','calf2', 0,'115','10'); sl('limbsB','calf2', 1,'115','10');
+
+  ss('liftV2', lData);
+})();
+
+function setLift(wk,sid,eid,si,f,v){
+  if(!lData[wk])lData[wk]={};
+  if(!lData[wk][sid])lData[wk][sid]={};
+  if(!lData[wk][sid][eid])lData[wk][sid][eid]={};
+  if(!lData[wk][sid][eid][si])lData[wk][sid][eid][si]={weight:'',reps:'',done:false};
+  lData[wk][sid][eid][si][f]=v;
+  ss('liftV2',lData);
+}
+
+// ════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════
+let curWeek=0,trainWeek=0,openDays={},openEx={},charts={};
+
+// ════════════════════════════════════════════════════════════
+//  NAV
+// ════════════════════════════════════════════════════════════
+function switchPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='tracker')renderTrackerAll();
+  if(id==='training')renderTraining();
+  if(id==='grocery')renderGrocery();
+}
+
+// ════════════════════════════════════════════════════════════
+//  TRACKER
+// ════════════════════════════════════════════════════════════
+function weekDates(wi){
+  const s=new Date(2026,3,27);s.setDate(s.getDate()+wi*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(s);d.setDate(d.getDate()+i);return d});
+}
+function isToday(d){const t=new Date();return d.getDate()===t.getDate()&&d.getMonth()===t.getMonth()&&d.getFullYear()===t.getFullYear()}
+
+function renderTrackerAll(){
+  renderTabs();renderMetrics();renderTargets();renderLog();renderCharts();renderLtCharts();
+  const d=weekDates(curWeek)[0];
+  document.getElementById('tracker-sub').textContent=`Week ${curWeek+1} · ${d.toLocaleDateString('en-US',{month:'short',year:'numeric'})}`;
+}
+function renderTabs(){
+  document.getElementById('weekTabs').innerHTML=[1,2,3,4].map((w,i)=>
+    `<button class="wtab${i===curWeek?' active':''}" onclick="setWeek(${i})">Week ${w}</button>`).join('');
+}
+function setWeek(i){curWeek=i;renderTrackerAll()}
+
+function renderMetrics(){
+  const wk=tData[curWeek];
+  const ws=wk.map(d=>d.weight).filter(v=>v!=null);
+  const cs=wk.map(d=>d.cal).filter(v=>v!=null);
+  const ss2=wk.map(d=>d.steps).filter(v=>v!=null);
+  const avgW=ws.length?(ws.reduce((a,b)=>a+b,0)/ws.length).toFixed(1):'—';
+  const avgC=cs.length?Math.round(cs.reduce((a,b)=>a+b,0)/cs.length):'—';
+  const totS=ss2.length?ss2.reduce((a,b)=>a+b,0).toLocaleString():'—';
+  const logged=wk.filter(d=>d.weight||d.cal||d.steps).length;
+  document.getElementById('metricsGrid').innerHTML=`
+    <div class="m-card"><div class="m-label">Avg wt</div><div class="m-val">${avgW}</div><div class="m-unit">lb</div></div>
+    <div class="m-card"><div class="m-label">Avg kcal</div><div class="m-val">${typeof avgC==='number'?avgC.toLocaleString():avgC}</div><div class="m-unit">kcal</div></div>
+    <div class="m-card"><div class="m-label">Steps</div><div class="m-val">${totS}</div><div class="m-unit">total</div></div>
+    <div class="m-card"><div class="m-label">Logged</div><div class="m-val">${logged}</div><div class="m-unit">of 7 days</div></div>
+    <div class="m-card" style="grid-column:2/-1"><div class="m-label">Cal target</div><div class="m-val" style="color:var(--accent)">3500/2500</div><div class="m-unit">train / off</div></div>`;
+}
+
+function renderTargets(){
+  const wk=tData[curWeek];
+  const cs=wk.map(d=>d.cal).filter(v=>v!=null);
+  const avgC=cs.length?Math.round(cs.reduce((a,b)=>a+b,0)/cs.length):0;
+  const tgt=Math.round((3500*3+2500*4)/7);
+  const cp=Math.min(100,avgC?Math.round(avgC/tgt*100):0);
+  const ss2=wk.map(d=>d.steps).filter(v=>v!=null);
+  const avgS=ss2.length?Math.round(ss2.reduce((a,b)=>a+b,0)/ss2.length):0;
+  const sp=Math.min(100,avgS?Math.round(avgS/6000*100):0);
+  const col=p=>p>=85?'var(--accent)':p>=60?'var(--amber)':'var(--red)';
+  document.getElementById('targetsSection').innerHTML=`
+    <div class="target-row"><div class="t-header"><span class="t-name">Calories / day</span><span class="t-nums">${avgC?avgC.toLocaleString():'—'} / ${tgt.toLocaleString()}</span></div><div class="t-track"><div class="t-fill" style="width:${cp}%;background:${col(cp)}"></div></div></div>
+    <div class="target-row"><div class="t-header"><span class="t-name">Steps / day</span><span class="t-nums">${avgS?avgS.toLocaleString():'—'} / 6,000</span></div><div class="t-track"><div class="t-fill" style="width:${sp}%;background:${col(sp)}"></div></div></div>`;
+}
+
+function renderLog(){
+  const dates=weekDates(curWeek),wk=tData[curWeek];
+  const DN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('logWrap').innerHTML=dates.map((d,i)=>{
+    const row=wk[i],id=`${curWeek}-${i}`,today=isToday(d),isTr=TRAIN_DAYS.includes(i);
+    const isOpen=openDays[id]||today;
+    const sum=[];if(row.weight)sum.push(`${row.weight}lb`);if(row.cal)sum.push(`${row.cal.toLocaleString()}kcal`);if(row.steps)sum.push(`${row.steps.toLocaleString()} steps`);
+    return `<div class="log-day${today?' today':''}" id="day-${id}">
+      <div class="log-day-header" onclick="toggleDay('${id}')">
+        <div><div class="log-day-date">${DN[d.getDay()]}, ${MN[d.getMonth()]} ${d.getDate()}</div><div class="log-day-sub">${sum.length?sum.join(' · '):'No data'}</div></div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="display:flex;gap:4px">${today?'<span class="tag tag-today">today</span>':''}<span class="tag ${isTr?'tag-train':'tag-off'}">${isTr?'train':'off'}</span></div>
+          <span style="font-size:14px;color:var(--text3);transition:transform 0.2s" id="dch-${id}"${isOpen?' style="font-size:14px;color:var(--text3);transform:rotate(90deg)"':''}>›</span>
+        </div>
+      </div>
+      <div class="log-fields${isOpen?' open':''}" id="fields-${id}">
+        <div class="log-grid">
+          <div class="field-block"><label>Weight (lb)</label><input type="number" step="0.1" inputmode="decimal" placeholder="—" value="${row.weight??''}" onchange="updateField(${curWeek},${i},'weight',this.value)"/></div>
+          <div class="field-block"><label>Calories</label><input type="number" inputmode="numeric" placeholder="—" value="${row.cal??''}" onchange="updateField(${curWeek},${i},'cal',this.value)"/></div>
+          <div class="field-block"><label>Steps</label><input type="number" inputmode="numeric" placeholder="—" value="${row.steps??''}" onchange="updateField(${curWeek},${i},'steps',this.value)"/></div>
+          <div class="field-block"><label>Volume (lb)</label><input type="number" inputmode="numeric" placeholder="—" value="${row.vol??''}" onchange="updateField(${curWeek},${i},'vol',this.value)"/></div>
+          <div class="field-block"><label>Blood pressure</label><input type="text" placeholder="120/80" value="${row.bp??''}" onchange="updateField(${curWeek},${i},'bp',this.value)"/></div>
+          <div class="field-block"><label>Blood glucose</label><input type="number" inputmode="numeric" placeholder="—" value="${row.bgl??''}" onchange="updateField(${curWeek},${i},'bgl',this.value)"/></div>
+          <div class="field-block full"><label>Muscle group</label><input type="text" placeholder="e.g. Torso A" value="${row.mg??''}" onchange="updateField(${curWeek},${i},'mg',this.value)"/></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDay(id){
+  openDays[id]=!openDays[id];
+  document.getElementById('fields-'+id)?.classList.toggle('open',openDays[id]);
+  const ch=document.getElementById('dch-'+id);
+  if(ch)ch.style.transform=openDays[id]?'rotate(90deg)':'';
+}
+
+function updateField(wk,day,field,val){
+  const nums=['weight','cal','steps','vol','bgl'];
+  tData[wk][day][field]=nums.includes(field)?(val===''?null:parseFloat(val)):val;
+  ss('fitV4',tData);
+  const row=tData[wk][day],sum=[];
+  if(row.weight)sum.push(`${row.weight}lb`);if(row.cal)sum.push(`${row.cal.toLocaleString()}kcal`);if(row.steps)sum.push(`${row.steps.toLocaleString()} steps`);
+  const el=document.querySelector(`#day-${wk}-${day} .log-day-sub`);
+  if(el)el.textContent=sum.length?sum.join(' · '):'No data';
+  renderMetrics();renderTargets();renderCharts();renderLtCharts();
+}
+
+function mkChart(id,labels,values,color){
+  if(charts[id]){charts[id].destroy();delete charts[id]}
+  const ctx=document.getElementById(id);if(!ctx)return;
+  charts[id]=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:values,borderColor:color,backgroundColor:color+'18',borderWidth:1.5,pointRadius:3,pointBackgroundColor:color,fill:true,tension:0.35,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a5753',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},y:{ticks:{color:'#5a5753',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}});
+}
+function renderCharts(){
+  const wk=tData[curWeek],dates=weekDates(curWeek);
+  const labels=dates.map(d=>['Su','Mo','Tu','We','Th','Fr','Sa'][d.getDay()]);
+  mkChart('wChart',labels,wk.map(d=>d.weight),'#c8f060');
+  mkChart('cChart',labels,wk.map(d=>d.cal),'#60a8f0');
+  mkChart('sChart',labels,wk.map(d=>d.steps),'#f0b860');
+  mkChart('bChart',labels,wk.map(d=>parseFloat(d.bgl)||null),'#f06080');
+}
+
+
+// ════════════════════════════════════════════════════════════
+//  HEALTHKIT DATA (injected from device)
+// ════════════════════════════════════════════════════════════
+const HK_WEIGHT = [
+  {d:'2026-02-04',lb:157.5},{d:'2026-02-11',lb:158.2},{d:'2026-02-12',lb:158.3},
+  {d:'2026-02-16',lb:157.2},{d:'2026-02-18',lb:152.8},{d:'2026-02-20',lb:157.2},
+  {d:'2026-02-23',lb:158.0},{d:'2026-03-05',lb:156.4},{d:'2026-03-14',lb:156.0},
+  {d:'2026-03-19',lb:158.4},{d:'2026-03-20',lb:159.8},{d:'2026-03-22',lb:160.8},
+  {d:'2026-03-25',lb:160.2},{d:'2026-03-30',lb:162.2},{d:'2026-04-24',lb:163.4},
+  {d:'2026-04-29',lb:164.8},{d:'2026-05-01',lb:166.4},
+];
+
+const HK_STEPS = [
+  {d:'2026-01-01',s:6067},{d:'2026-01-02',s:3574},{d:'2026-01-03',s:6219},
+  {d:'2026-01-04',s:4700},{d:'2026-01-05',s:5814},{d:'2026-01-06',s:6970},
+  {d:'2026-01-07',s:5437},{d:'2026-01-08',s:5145},{d:'2026-01-09',s:4484},
+  {d:'2026-01-10',s:4172},{d:'2026-01-11',s:2890},{d:'2026-01-12',s:5162},
+  {d:'2026-01-13',s:6667},{d:'2026-01-14',s:6462},{d:'2026-01-15',s:6512},
+  {d:'2026-01-16',s:4955},{d:'2026-01-17',s:2138},{d:'2026-01-18',s:2660},
+  {d:'2026-01-19',s:3270},{d:'2026-01-20',s:3821},{d:'2026-01-21',s:5975},
+  {d:'2026-01-22',s:6241},{d:'2026-01-23',s:5548},{d:'2026-01-24',s:2608},
+  {d:'2026-01-25',s:3626},{d:'2026-01-26',s:2061},{d:'2026-01-27',s:4148},
+  {d:'2026-01-28',s:4757},{d:'2026-01-29',s:6320},{d:'2026-01-30',s:8018},
+  {d:'2026-01-31',s:3900},{d:'2026-02-01',s:4667},{d:'2026-02-02',s:1240},
+  {d:'2026-02-03',s:3468},{d:'2026-02-04',s:2052},{d:'2026-02-05',s:13053},
+  {d:'2026-02-06',s:6804},{d:'2026-02-07',s:4064},{d:'2026-02-08',s:5403},
+  {d:'2026-02-09',s:6645},{d:'2026-02-10',s:6798},{d:'2026-02-11',s:6533},
+  {d:'2026-02-12',s:7321},{d:'2026-02-13',s:2910},{d:'2026-02-14',s:7689},
+  {d:'2026-02-15',s:6312},{d:'2026-02-16',s:12399},{d:'2026-02-17',s:1898},
+  {d:'2026-02-18',s:5225},{d:'2026-02-19',s:11966},{d:'2026-02-20',s:7863},
+  {d:'2026-02-21',s:2842},{d:'2026-02-22',s:10752},{d:'2026-02-23',s:8281},
+  {d:'2026-02-24',s:5577},{d:'2026-02-25',s:800},{d:'2026-02-26',s:1234},
+  {d:'2026-02-27',s:1378},{d:'2026-02-28',s:5294},{d:'2026-03-01',s:10714},
+  {d:'2026-03-02',s:10553},{d:'2026-03-03',s:13053},{d:'2026-03-04',s:9911},
+  {d:'2026-03-05',s:9950},{d:'2026-03-06',s:2494},{d:'2026-03-07',s:4490},
+  {d:'2026-03-08',s:4590},{d:'2026-03-09',s:5865},{d:'2026-03-10',s:2917},
+  {d:'2026-03-11',s:7472},{d:'2026-03-12',s:11847},{d:'2026-03-13',s:13436},
+  {d:'2026-03-14',s:7170},{d:'2026-03-15',s:4147},{d:'2026-03-16',s:7014},
+  {d:'2026-03-17',s:7723},{d:'2026-03-18',s:7466},{d:'2026-03-19',s:8335},
+  {d:'2026-03-20',s:7124},{d:'2026-03-21',s:8705},{d:'2026-03-22',s:5117},
+  {d:'2026-03-23',s:9707},{d:'2026-03-24',s:10525},{d:'2026-03-25',s:7964},
+  {d:'2026-03-26',s:7657},{d:'2026-03-27',s:7635},{d:'2026-03-28',s:4078},
+  {d:'2026-03-29',s:7781},{d:'2026-03-30',s:11837},{d:'2026-03-31',s:6564},
+  {d:'2026-04-01',s:2872},{d:'2026-04-02',s:4114},{d:'2026-04-03',s:2975},
+  {d:'2026-04-04',s:1870},{d:'2026-04-05',s:3225},{d:'2026-04-06',s:8237},
+  {d:'2026-04-07',s:3513},{d:'2026-04-08',s:3222},{d:'2026-04-09',s:6143},
+  {d:'2026-04-10',s:2480},{d:'2026-04-11',s:4516},{d:'2026-04-12',s:1605},
+  {d:'2026-04-13',s:5748},{d:'2026-04-14',s:9238},{d:'2026-04-15',s:6763},
+  {d:'2026-04-16',s:9086},{d:'2026-04-17',s:5506},{d:'2026-04-18',s:3643},
+  {d:'2026-04-19',s:3335},{d:'2026-04-20',s:6882},{d:'2026-04-21',s:9149},
+  {d:'2026-04-22',s:6624},{d:'2026-04-23',s:7023},{d:'2026-04-24',s:7129},
+  {d:'2026-04-25',s:1608},{d:'2026-04-26',s:2298},{d:'2026-04-27',s:5801},
+  {d:'2026-04-28',s:5712},{d:'2026-04-29',s:6584},{d:'2026-04-30',s:4972},
+  {d:'2026-05-01',s:5404},
+];
+
+let ltRange = 'all';
+
+function setLtRange(r) {
+  ltRange = r;
+  document.querySelectorAll('#ltRangeWrap .wtab').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('ltBtn' + r.replace('w','').replace('m','') + (r==='all'?'All':r==='4w'?'4w':'3m'));
+  // simpler: toggle by id
+  document.getElementById('ltBtn4w').classList.toggle('active', r==='4w');
+  document.getElementById('ltBtn3m').classList.toggle('active', r==='3m');
+  document.getElementById('ltBtnAll').classList.toggle('active', r==='all');
+  renderLtCharts();
+}
+
+function getFilteredData(arr, range) {
+  if (range === 'all') return arr;
+  const now = new Date('2026-05-02');
+  const cutoff = new Date(now);
+  if (range === '4w') cutoff.setDate(now.getDate() - 28);
+  else if (range === '3m') cutoff.setMonth(now.getMonth() - 3);
+  return arr.filter(x => new Date(x.d) >= cutoff);
+}
+
+function linReg(vals) {
+  // Returns {slope, intercept} for y = mx + b over index x
+  const n = vals.length;
+  if (n < 2) return null;
+  let sx=0,sy=0,sxy=0,sx2=0;
+  vals.forEach((y,x)=>{sx+=x;sy+=y;sxy+=x*y;sx2+=x*x;});
+  const slope=(n*sxy-sx*sy)/(n*sx2-sx*sx);
+  const intercept=(sy-slope*sx)/n;
+  return {slope,intercept};
+}
+
+function mkLtChart(id, labels, values, color, refLine) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  const ctx = document.getElementById(id); if (!ctx) return;
+
+  // Build trendline
+  const reg = linReg(values);
+  const trendVals = reg ? values.map((_,i) => Math.round((reg.slope*i+reg.intercept)*10)/10) : [];
+  const isWt = id === 'ltWChart';
+  const trendColor = isWt ? 'rgba(200,240,96,0.55)' : 'rgba(240,184,96,0.55)';
+
+  const datasets = [
+    {
+      data: values, borderColor: color, backgroundColor: color + '14',
+      borderWidth: 2, pointRadius: 3, pointBackgroundColor: color,
+      fill: true, tension: 0.3, spanGaps: false, order: 2,
+    },
+    {
+      label: 'Trend',
+      data: trendVals, borderColor: trendColor,
+      borderWidth: 2, borderDash: [6,4], pointRadius: 0,
+      fill: false, tension: 0, order: 1,
+    },
+  ];
+  if (refLine != null) {
+    datasets.push({
+      data: values.map(() => refLine), borderColor: 'rgba(255,255,255,0.14)',
+      borderWidth: 1, borderDash: [3,5], pointRadius: 0, fill: false, order: 3,
+    });
+  }
+  charts[id] = new Chart(ctx, {
+    type: 'line', data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: c => {
+              if (c.datasetIndex === 1) return 'Trend: ' + c.parsed.y + (isWt?' lb':' steps');
+              if (c.datasetIndex === 0) return c.parsed.y + (isWt?' lb':' steps');
+              return null;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#5a5753', font: { size: 10 }, maxTicksLimit: 10, maxRotation: 0 },
+             grid: { color: 'rgba(255,255,255,0.04)' }, border: { display: false } },
+        y: { ticks: { color: '#5a5753', font: { size: 10 } },
+             grid: { color: 'rgba(255,255,255,0.04)' }, border: { display: false } },
+      }
+    }
+  });
+}
+
+function fmtDate(d) {
+  const parts = d.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[parseInt(parts[1])-1] + ' ' + parseInt(parts[2]);
+}
+
+function renderLtCharts() {
+  // Weight — merge HealthKit + any manual entries from tData
+  const wData = [...HK_WEIGHT];
+  // Add manual entries from tData that aren't already in HK
+  const hkDates = new Set(HK_WEIGHT.map(x => x.d));
+  for (let wi = 0; wi < 4; wi++) {
+    weekDates(wi).forEach((dt, di) => {
+      const row = tData[wi][di];
+      if (row.weight) {
+        const key = dt.toISOString().slice(0,10);
+        if (!hkDates.has(key)) wData.push({d: key, lb: row.weight});
+      }
+    });
+  }
+  wData.sort((a,b) => a.d.localeCompare(b.d));
+
+  const filtW = getFilteredData(wData, ltRange);
+  const wLabels = filtW.map(x => fmtDate(x.d));
+  const wVals = filtW.map(x => Math.round(x.lb * 10) / 10);
+
+  // Stats
+  if (wVals.length) {
+    const mn = Math.min(...wVals), mx = Math.max(...wVals);
+    const delta = Math.round((wVals[wVals.length-1] - wVals[0]) * 10) / 10;
+    const sign = delta >= 0 ? '+' : '';
+    document.getElementById('ltWtStat').textContent = mn + '–' + mx + ' lb  ' + sign + delta + ' lb';
+  }
+  mkLtChart('ltWChart', wLabels, wVals, '#c8f060', null);
+
+  // Steps — HealthKit + tData manual
+  const sData = [...HK_STEPS];
+  const hkStepDates = new Set(HK_STEPS.map(x => x.d));
+  for (let wi = 0; wi < 4; wi++) {
+    weekDates(wi).forEach((dt, di) => {
+      const row = tData[wi][di];
+      if (row.steps) {
+        const key = dt.toISOString().slice(0,10);
+        if (!hkStepDates.has(key)) sData.push({d: key, s: row.steps});
+      }
+    });
+  }
+  sData.sort((a,b) => a.d.localeCompare(b.d));
+
+  const filtS = getFilteredData(sData, ltRange);
+  const sLabels = filtS.map(x => fmtDate(x.d));
+  const sVals = filtS.map(x => Math.round(x.s));
+
+  if (sVals.length) {
+    const avg = Math.round(sVals.reduce((a,b)=>a+b,0)/sVals.length);
+    const mx = Math.max(...sVals);
+    document.getElementById('ltStStat').textContent = 'avg ' + avg.toLocaleString() + '  max ' + mx.toLocaleString();
+  }
+  mkLtChart('ltSChart', sLabels, sVals, '#f0b860', 6000);
+}
+
+// ════════════════════════════════════════════════════════════
+//  GOOGLE DRIVE SYNC
+// ════════════════════════════════════════════════════════════
+// Week 1 data rows start at row index 3 in the Overview sheet (0-indexed from CSV parse).
+// Column order: DATE, STEPS, WEIGHT, CALORIES, MUSCLE GROUP, VOLUME LBs, AM/BP, AM/BGL, Comment
+// We use the Anthropic API to ask Claude to call Google Drive with the updated xlsx content.
+// Since Drive MCP only supports read, we write back via the Anthropic API with Drive MCP attached.
+
+async function syncToDrive(){
+  const btn=document.getElementById('syncBtn');
+  const icon=document.getElementById('syncIcon');
+  const text=document.getElementById('syncText');
+  btn.className='sync-btn syncing';
+  icon.textContent='↻';
+  text.textContent='Syncing…';
+
+  // Build the data we want to write
+  const rows=[];
+  for(let wi=0;wi<4;wi++){
+    const dates=weekDates(wi);
+    for(let di=0;di<7;di++){
+      const row=tData[wi][di];
+      const d=dates[di];
+      const dateStr=`${d.getDate()}-${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]}-${String(d.getFullYear()).slice(2)}`;
+      rows.push({date:dateStr,steps:row.steps??'',weight:row.weight??'',calories:row.cal??'',muscleGroup:row.mg??'',volume:row.vol??'',bp:row.bp??'',bgl:row.bgl??''});
+    }
+  }
+
+  const prompt=`You have access to Google Drive. The file ID is "${FILE_ID}" (Data Tracking.xlsx).
+
+I need you to update the "Overview April" sheet with the following daily data. The sheet has 4 weekly blocks. Each block has a header row (DATE, STEPS, WEIGHT, CALORIES, MUSCLE GROUP, VOLUME LB\'s, AM/BP, AM/BGL, Comment) followed by 7 data rows, then totals and average rows.
+
+Here is the complete updated data for all 4 weeks (28 days total):
+
+${rows.map((r,i)=>`Week ${Math.floor(i/7)+1}, Day ${(i%7)+1}: DATE=${r.date} | STEPS=${r.steps} | WEIGHT=${r.weight} | CALORIES=${r.calories} | MUSCLE GROUP=${r.muscleGroup} | VOLUME=${r.volume} | BP=${r.bp} | BGL=${r.bgl}`).join('\n')}
+
+Please download the file, update each matching date row with the provided values (only overwrite cells that have a non-empty value in the data above, leave others untouched), and upload the updated file back to Drive with the same file ID, replacing the existing file. Preserve all other sheets and data.`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        mcp_servers:[{type:'url',url:'https://drivemcp.googleapis.com/mcp/v1',name:'gdrive'}],
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data=await resp.json();
+    if(data.error){throw new Error(data.error.message||'API error')}
+    btn.className='sync-btn success';
+    icon.textContent='✓';
+    text.textContent='Synced to Google Sheets';
+    setTimeout(()=>{btn.className='sync-btn';icon.textContent='⇅';text.textContent='Sync to Google Sheets'},3000);
+  }catch(e){
+    btn.className='sync-btn error';
+    icon.textContent='✗';
+    text.textContent='Sync failed — tap to retry';
+    console.error(e);
+    setTimeout(()=>{btn.className='sync-btn';icon.textContent='⇅';text.textContent='Sync to Google Sheets'},4000);
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  TRAINING
+// ════════════════════════════════════════════════════════════
+function renderTraining(){
+  document.getElementById('trainWeekBtns').innerHTML=[1,2,3,4].map((w,i)=>
+    `<button class="tw-btn${i===trainWeek?' active':''}" onclick="setTrainWeek(${i})">Wk ${w}</button>`).join('');
+  document.getElementById('train-sub').textContent=`Week ${trainWeek+1} · Ant/Post split`;
+  renderTrainCards();
+}
+function setTrainWeek(i){trainWeek=i;renderTraining()}
+
+function getBestWt(wk,sid,eid,numSets){
+  let best=0;
+  for(let s=0;s<numSets;s++){const l=getLift(wk,sid,eid,s);const w=parseFloat(l.weight);if(!isNaN(w)&&w>best)best=w}
+  return best||null;
+}
+
+function getExSummary(wk,sid,eid,numSets){
+  const parts=[];
+  for(let s=0;s<numSets;s++){const l=getLift(wk,sid,eid,s);if(l.weight||l.reps)parts.push(`${l.weight||'?'}×${l.reps||'?'}`)}
+  return parts.length?parts.join('  '):null;
+}
+
+function renderTrainCards(){
+  document.getElementById('trainCards').innerHTML=PLAN.map((sess,si)=>{
+    const bStyle=BADGE_STYLE[sess.color]||BADGE_STYLE.accent;
+    const isOpen=!!openEx[`s${si}`];
+
+    const exHtml=sess.exercises.map((ex,ei)=>{
+      const key=`s${si}e${ei}`;
+      const isExOpen=!!openEx[key];
+      const summary=getExSummary(trainWeek,sess.id,ex.id,ex.sets);
+      const targetRep=ex.reps[Math.min(trainWeek,2)];
+
+      // Progress bar data
+      const progW=[0,1,2,3].map(w=>getBestWt(w,sess.id,ex.id,ex.sets));
+      const maxP=Math.max(...progW.filter(v=>v!=null),1);
+      const progHtml=progW.map((w,wi)=>{
+        const pct=w?Math.round((w/maxP)*100):0;
+        const isCur=wi===trainWeek;
+        return `<div class="prog-col">
+          <div class="prog-bar-wrap"><div class="prog-bar" id="pb-${key}-${wi}" style="height:${pct}%;background:${isCur?BAR_COL[sess.color]:'#3a3a40'}"></div></div>
+          <div class="prog-wk" style="${isCur?'color:var(--text2)':''}"">W${wi+1}</div>
+          <div class="prog-val" id="pv-${key}-${wi}">${w?w+'lb':''}</div>
+        </div>`;
+      }).join('');
+
+      // Set rows
+      const setHtml=Array.from({length:ex.sets},(_,si2)=>{
+        const l=getLift(trainWeek,sess.id,ex.id,si2);
+        return `<div class="set-row">
+          <div class="set-badge">${si2+1}</div>
+          <input class="set-inp${l.weight?' has-val':''}" type="number" inputmode="decimal" step="2.5" placeholder="lb" value="${l.weight}" onchange="upLift(${trainWeek},'${sess.id}','${ex.id}',${si2},'weight',this.value,this,'${key}',${ex.sets})"/>
+          <input class="set-inp${l.reps?' has-val':''}" type="number" inputmode="numeric" placeholder="reps" value="${l.reps}" onchange="upLift(${trainWeek},'${sess.id}','${ex.id}',${si2},'reps',this.value,this,'${key}',${ex.sets})"/>
+          <button class="done-btn${l.done?' done':''}" onclick="togDone(${trainWeek},'${sess.id}','${ex.id}',${si2},this)">✓</button>
+        </div>`;
+      }).join('');
+
+      return `<div class="ex-block" id="exb-${key}">
+        <div class="ex-header" onclick="togEx('${key}')">
+          <div class="ex-left">
+            <span class="ex-num">${String(ei+1).padStart(2,'0')}</span>
+            <div>
+              <div class="ex-name">${ex.name}</div>
+              <div class="ex-target">Wk${trainWeek+1}: ${targetRep} · ${ex.sets} sets</div>
+              ${summary?`<div class="ex-done-summary">${summary}</div>`:''}
+            </div>
+          </div>
+          <span class="ex-chev" id="ec-${key}" style="transform:${isExOpen?'rotate(90deg)':''}">›</span>
+        </div>
+        <div class="set-area${isExOpen?' open':''}" id="sa-${key}">
+          <div class="set-col-heads"><span></span><span>weight</span><span>reps</span><span></span></div>
+          ${setHtml}
+        </div>
+        <div id="prog-${key}" style="${isExOpen?'':'display:none'}">
+          <div class="prog-area">
+            <div class="prog-label">Top weight · weeks 1–4</div>
+            <div class="prog-cols">${progHtml}</div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="train-day-card">
+      <div class="train-day-header" onclick="togSession('s${si}')">
+        <div>
+          <div class="train-day-title">${sess.title}</div>
+          <div class="train-day-meta">${sess.day} · ${sess.type}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="train-badge" style="${bStyle}">${sess.title.split(' ')[0]}</span>
+          <span style="color:var(--text3);font-size:14px" id="sc-${si}">${isOpen?'↑':'↓'}</span>
+        </div>
+      </div>
+      <div class="train-body${isOpen?' open':''}" id="s${si}">${exHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function togSession(id){
+  const el=document.getElementById(id);if(!el)return;
+  const idx=id.replace('s','');
+  const isOpen=el.classList.toggle('open');
+  openEx[id]=isOpen;
+  const ch=document.getElementById('sc-'+idx);
+  if(ch)ch.textContent=isOpen?'↑':'↓';
+}
+
+function togEx(key){
+  const sa=document.getElementById('sa-'+key);
+  const prog=document.getElementById('prog-'+key);
+  const ch=document.getElementById('ec-'+key);
+  if(!sa)return;
+  const isOpen=sa.classList.toggle('open');
+  openEx[key]=isOpen;
+  if(prog)prog.style.display=isOpen?'':'none';
+  if(ch)ch.style.transform=isOpen?'rotate(90deg)':'';
+}
+
+function upLift(wk,sid,eid,si,field,val,inp,key,numSets){
+  setLift(wk,sid,eid,si,field,val);
+  if(inp)inp.classList.toggle('has-val',val!=='');
+  // Update summary text
+  const sess=PLAN.find(s=>s.id===sid);
+  const ex=sess?.exercises.find(e=>e.id===eid);
+  if(ex){
+    const summary=getExSummary(wk,sid,eid,numSets);
+    const sumEl=document.querySelector(`#exb-${key} .ex-done-summary`);
+    const targetEl=document.querySelector(`#exb-${key} .ex-target`);
+    if(summary){
+      if(sumEl)sumEl.textContent=summary;
+      else if(targetEl){const d=document.createElement('div');d.className='ex-done-summary';d.textContent=summary;targetEl.after(d)}
+    }
+    // Refresh progress bars
+    const progW=[0,1,2,3].map(w=>getBestWt(w,sid,eid,numSets));
+    const maxP=Math.max(...progW.filter(v=>v!=null),1);
+    progW.forEach((w,wi)=>{
+      const bar=document.getElementById(`pb-${key}-${wi}`);
+      const val2=document.getElementById(`pv-${key}-${wi}`);
+      if(bar)bar.style.height=(w?Math.round((w/maxP)*100):0)+'%';
+      if(val2)val2.textContent=w?w+'lb':'';
+    });
+  }
+}
+
+function togDone(wk,sid,eid,si,btn){
+  const l=getLift(wk,sid,eid,si);
+  setLift(wk,sid,eid,si,'done',!l.done);
+  btn.classList.toggle('done',!l.done);
+}
+
+// ════════════════════════════════════════════════════════════
+//  NUTRITION
+// ════════════════════════════════════════════════════════════
+const RECIPES={
+  pre:[
+    {name:'Classic Pre-Workout Meal',sub:'~45-60 min before training',
+     macros:{cal:470,p:15,c:101,f:1},
+     ingredients:[
+       {n:'Cream of rice (dry)',   g:'50g',  cal:182,p:3, c:40,f:0},
+       {n:'Skim milk powder',      g:'30g',  cal:107,p:11,c:16,f:0},
+       {n:'Pomegranate juice',     g:'240ml',cal:134,p:1, c:33,f:1},
+       {n:'Blackstrap molasses',   g:'15g',  cal:47, p:0, c:12,f:0},
+     ],
+     note:'Cook cream of rice dry weight — it expands 3x with water. Pomegranate juice is required by your coach every pre-workout session. Mix skim milk powder into the cooked COR or into a separate glass — it adds calcium, potassium, magnesium, and slow-digesting protein. Molasses adds iron, potassium, and calcium.'},
+    {name:'Rice Cake Stack',sub:'~30-45 min before training',
+     macros:{cal:461,p:16,c:98,f:1},
+     ingredients:[
+       {n:'Rice cakes plain (4 cakes)',g:'36g', cal:140,p:4, c:28,f:0},
+       {n:'Skim milk powder',          g:'30g', cal:107,p:11,c:16,f:0},
+       {n:'Honey',                     g:'21g', cal:64, p:0, c:17,f:0},
+       {n:'Pomegranate juice',         g:'240ml',cal:134,p:1,c:33,f:1},
+       {n:'Blackstrap molasses',       g:'5g',  cal:16, p:0, c:4, f:0},
+     ],
+     note:'Quickest pre-workout option — no cooking. Spread honey on rice cakes, mix skim milk powder in a glass of water, drink alongside the pomegranate juice. Molasses optional but adds potassium and iron in 1 tsp.'},
+  ],
+  intra:[
+    {name:'Intra-Workout Formula',sub:'Sip throughout training',
+     macros:{cal:236,p:13,c:48,f:2},
+     ingredients:[
+       {n:'Karbolyn (or HBCD/Vitargo)',g:'25g',  cal:96, p:0, c:24,f:0},
+       {n:'Coconut water',             g:'500ml',cal:100,p:3, c:24,f:2},
+       {n:'EAA powder',                g:'10g',  cal:40, p:10,c:0, f:0},
+     ],
+     note:'Exactly 50/50 carb split per your coach — 24g from Karbolyn, 24g from coconut water. Use a 500ml bottle of coconut water as your mixer. Coconut water covers your intra potassium target. Sip throughout the session, not all at once.'},
+  ],
+  post:[
+    {name:'Milk & Cereal Post-Workout',sub:'Within 30 min after training',
+     macros:{cal:974,p:25,c:184,f:17},
+     ingredients:[
+       {n:'Corn Flakes (non-fortified)',g:'120g', cal:444,p:8, c:101,f:1},
+       {n:'Whole milk',                 g:'500ml',cal:305,p:16,c:24, f:16},
+       {n:'Mixed berries (frozen)',     g:'100g', cal:50, p:1, c:12, f:0},
+       {n:'Blackstrap molasses',        g:'15g',  cal:47, p:0, c:12, f:0},
+       {n:'Honey',                      g:'42g',  cal:128,p:0, c:35, f:0},
+     ],
+     note:"Coach's go-to recommendation. Whole milk covers post-workout calcium. Add an extra 50g cereal if you want to push closer to the 170g carb target — that adds ~85 kcal and 18g carbs."},
+    {name:'Cream of Rice Power Bowl',sub:'Within 30 min after training',
+     macros:{cal:927,p:40,c:171,f:12},
+     ingredients:[
+       {n:'Cream of rice (dry)',  g:'100g', cal:364,p:7, c:80,f:1},
+       {n:'Whole milk',          g:'300ml', cal:183,p:10,c:14,f:10},
+       {n:'Whey protein',        g:'25g',   cal:100,p:22,c:3, f:1},
+       {n:'Blackstrap molasses', g:'15g',   cal:47, p:0, c:12,f:0},
+       {n:'Banana (1 medium)',   g:'118g',  cal:105,p:1, c:27,f:0},
+       {n:'Honey',               g:'42g',   cal:128,p:0, c:35,f:0},
+     ],
+     note:'Cook 100g dry cream of rice in the whole milk instead of water — this loads calcium and adds slow protein. Stir in whey after cooking so it does not denature. Banana + honey make this genuinely taste good while smashing the carb target.'},
+  ],
+};
+
+let activeRecipeTab='pre';
+function setRecipeTab(tab){
+  activeRecipeTab=tab;
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+  document.querySelectorAll('.recipe-panel').forEach(p=>p.classList.toggle('active',p.id==='rp-'+tab));
+}
+
+function renderNutrition(){
+  const supps=[
+    {n:'Thorne AM/PM Multivitamin',d:'as directed',c:'var(--accent)'},
+    {n:'Carlsons EPA + DHA Gems',d:'1 each preworkout',c:'var(--blue)'},
+    {n:'Vitamin D3/K2',d:'5,000 IU daily',c:'var(--amber)'},
+    {n:'R-ALA',d:'300mg daily',c:'var(--teal)'},
+    {n:'Alpha GPC',d:'600mg preworkout',c:'var(--accent)'},
+    {n:'CoQ-10',d:'200mg daily',c:'var(--blue)'},
+    {n:'NAC',d:'600mg 2x daily',c:'var(--amber)'},
+    {n:'Magnesium',d:'700–800mg',c:'var(--teal)'},
+  ];
+
+  const recipePanels=Object.entries(RECIPES).map(([tab,list])=>`
+    <div class="recipe-panel${tab===activeRecipeTab?' active':''}" id="rp-${tab}">
+      ${list.map(r=>`
+        <div class="recipe-card">
+          <div class="recipe-header">
+            <div class="recipe-name">${r.name}</div>
+            <div class="recipe-sub">${r.sub}</div>
+            <div class="recipe-macros">
+              <span class="rmac rmac-cal">${r.macros.cal} kcal</span>
+              <span class="rmac rmac-p">${r.macros.p}g protein</span>
+              <span class="rmac rmac-c">${r.macros.c}g carbs</span>
+              <span class="rmac rmac-f">${r.macros.f}g fat</span>
+            </div>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-section">Ingredients</div>
+            ${r.ingredients.map(ing=>`
+              <div class="ing-row-wrap">
+                <div class="ing-main-row">
+                  <span class="ing-name">${ing.n}</span>
+                  <span class="ing-amt" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3)">${ing.g}</span>
+                </div>
+                ${ing.cal>0?`<div class="ing-macro-row">
+                  <span class="ing-mac ing-mac-cal">${ing.cal} kcal</span>
+                  ${ing.p>0?`<span class="ing-mac ing-mac-p">${ing.p}g P</span>`:''}
+                  ${ing.c>0?`<span class="ing-mac ing-mac-c">${ing.c}g C</span>`:''}
+                  ${ing.f>0?`<span class="ing-mac ing-mac-f">${ing.f}g F</span>`:''}
+                </div>`:''}
+              </div>`).join('')}
+            <div class="recipe-note">${r.note}</div>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+
+  document.getElementById('nutritionContent').innerHTML=`
+    <div class="macro-card">
+      <div class="macro-card-title">Training day</div>
+      <div class="macro-grid">
+        <div class="macro-item macro-full" style="background:var(--accent3);border:0.5px solid var(--accent2)"><div class="mi-label">Calories</div><div class="mi-val" style="color:var(--accent)">3,500</div><div class="mi-unit">kcal</div></div>
+        <div class="macro-item"><div class="mi-label">Protein</div><div class="mi-val" style="color:var(--blue)">135</div><div class="mi-unit">g</div></div>
+        <div class="macro-item"><div class="mi-label">Carbs</div><div class="mi-val" style="color:var(--amber)">600</div><div class="mi-unit">g</div></div>
+        <div class="macro-item"><div class="mi-label">Fat</div><div class="mi-val" style="color:var(--teal)">60</div><div class="mi-unit">g</div></div>
+        <div class="macro-item"><div class="mi-label">Fiber</div><div class="mi-val">35</div><div class="mi-unit">g</div></div>
+      </div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-card-title">Off day</div>
+      <div class="macro-grid">
+        <div class="macro-item macro-full" style="background:var(--blue2);border:0.5px solid rgba(96,168,240,0.2)"><div class="mi-label">Calories</div><div class="mi-val" style="color:var(--blue)">2,500</div><div class="mi-unit">kcal</div></div>
+        <div class="macro-item"><div class="mi-label">Protein</div><div class="mi-val" style="color:var(--blue)">135</div><div class="mi-unit">g</div></div>
+        <div class="macro-item"><div class="mi-label">Carbs</div><div class="mi-val" style="color:var(--amber)">320</div><div class="mi-unit">g</div></div>
+        <div class="macro-item"><div class="mi-label">Fat</div><div class="mi-val" style="color:var(--teal)">75</div><div class="mi-unit">g</div></div>
+        <div class="macro-item"><div class="mi-label">Fiber</div><div class="mi-val">25</div><div class="mi-unit">g</div></div>
+      </div>
+    </div>
+
+    <div class="section-label" style="padding-top:0.5rem">Peri-workout recipes</div>
+    <div class="recipe-tabs">
+      <button class="rtab${activeRecipeTab==='pre'?' active':''}" data-tab="pre" onclick="setRecipeTab('pre')">Pre-workout</button>
+      <button class="rtab${activeRecipeTab==='intra'?' active':''}" data-tab="intra" onclick="setRecipeTab('intra')">Intra</button>
+      <button class="rtab${activeRecipeTab==='post'?' active':''}" data-tab="post" onclick="setRecipeTab('post')">Post-workout</button>
+    </div>
+    ${recipePanels}
+
+    <div class="section-label" style="padding-top:0.25rem">Daily meals</div>
+    <div class="meal-section-tabs">
+      <button class="mstab${activeMealTab==='breakfast'?' active':''}" data-tab="breakfast" onclick="setMealTab('breakfast')">Breakfast</button>
+      <button class="mstab${activeMealTab==='lunch'?' active':''}" data-tab="lunch" onclick="setMealTab('lunch')">Lunch</button>
+      <button class="mstab${activeMealTab==='dinner'?' active':''}" data-tab="dinner" onclick="setMealTab('dinner')">Dinner</button>
+      <button class="mstab${activeMealTab==='snacks'?' active':''}" data-tab="snacks" onclick="setMealTab('snacks')">Snacks</button>
+      <button class="mstab${activeMealTab==='desserts'?' active':''}" data-tab="desserts" onclick="setMealTab('desserts')">Desserts</button>
+    </div>
+    ${Object.entries(MEALS).map(([tab,list])=>buildMealPanel(tab,list)).join('')}
+
+    <div class="section-label">Supplements</div>
+    <div class="macro-card">
+      <div>${supps.map(s=>`<div class="supp-row"><span class="supp-dot" style="background:${s.c}"></span><span class="supp-name">${s.n}</span><span class="supp-dose">${s.d}</span></div>`).join('')}</div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  MEALS DATA
+// ════════════════════════════════════════════════════════════
+// badge types: home=cook fresh, prep=meal prep ahead, quick=no cook/5min
+// day: train | off | both
+const MEALS = {
+  breakfast: [
+    {
+      name: 'Egg & Potato Breakfast Hash',
+      sub: 'Home · 15 min',
+      badges: ['home','both'],
+      macros: {cal:520, p:30, c:48, f:20},
+      nutrients: ['B12','Vit D','Iron','Potassium','Riboflavin','Selenium'],
+      fermented: 'Kefir (½ cup on the side)',
+      ingredients: [
+        {n:'Whole eggs', a:'3 large'},
+        {n:'Regular potato (diced small)', a:'200g'},
+        {n:'Lean ground beef or bacon', a:'60g'},
+        {n:'Spinach', a:'big handful'},
+        {n:'Olive oil', a:'1 tbsp'},
+        {n:'Garlic powder, paprika, salt', a:'to taste'},
+        {n:'Kefir', a:'½ cup on side'},
+      ],
+      steps: [
+        'Dice potato small (½ inch cubes) so it cooks fast. Microwave 3 min first to par-cook.',
+        'Heat olive oil in a skillet on medium-high. Add potato, press flat, let crisp 4 min undisturbed.',
+        'Push potato to side. Add ground beef or crumbled bacon, cook through.',
+        'Add spinach, toss until wilted. Season everything.',
+        'Clear 3 wells in the pan, crack eggs in, cover with a lid 2 min for set whites.',
+        'Eat straight from the pan. Kefir alongside.',
+      ],
+      note: '<strong>Your consistency meal.</strong> Potatoes are easy, cheap, and on your coach\'s micronutrient list. Ground beef gives iron and zinc without much prep. Eggs add B12 and D. One pan, 15 min. Scale up the potato if it\'s a training day.',
+    },
+    {
+      name: 'Greek Yogurt Power Bowl',
+      sub: 'No cook · 5 min',
+      badges: ['quick','both'],
+      macros: {cal:480, p:38, c:62, f:10},
+      nutrients: ['Calcium','Probiotics','Manganese','Vit C','Vit K','Folate'],
+      fermented: 'Greek yogurt IS the base',
+      ingredients: [
+        {n:'0% Greek yogurt', a:'300g'},
+        {n:'Blueberries (fresh or frozen)', a:'100g'},
+        {n:'Kiwi fruit', a:'1, sliced'},
+        {n:'Walnuts', a:'20g, chopped'},
+        {n:'Blackstrap molasses', a:'1 tsp drizzled'},
+        {n:'Honey', a:'1 tsp'},
+        {n:'Ezekiel cereal or granola', a:'30g optional'},
+      ],
+      steps: [
+        'Spoon yogurt into bowl.',
+        'Top with blueberries, kiwi, walnuts.',
+        'Drizzle molasses and honey.',
+        'Add cereal on top if you want more carbs or crunch.',
+      ],
+      note: '<strong>Blueberries are your coach\'s top berry.</strong> Kiwi is on the micronutrient-dense list. Walnuts are the best poly fat source. Molasses sneaks in iron, potassium, and calcium. Zero cooking, done in 5 min. Add more yogurt on training days to push protein up.',
+    },
+    {
+      name: 'Overnight Oat & Egg White Jar',
+      sub: 'Meal prep · 5 min active',
+      badges: ['prep','off'],
+      macros: {cal:430, p:35, c:52, f:10},
+      nutrients: ['B1 (Thiamine)','Manganese','Folate','Vit E','Selenium'],
+      fermented: '2 tbsp plain kefir stirred in before eating',
+      ingredients: [
+        {n:'Rolled oats', a:'80g'},
+        {n:'Skim milk or milk of choice', a:'200ml'},
+        {n:'Plain kefir', a:'2 tbsp'},
+        {n:'Egg whites (carton)', a:'100ml, cooked + cooled'},
+        {n:'Blueberries', a:'80g'},
+        {n:'Walnuts', a:'15g'},
+        {n:'Blackstrap molasses', a:'1 tsp'},
+        {n:'Honey', a:'1 tsp'},
+      ],
+      steps: [
+        'Night before: microwave egg whites 90 sec, let cool fully.',
+        'Mix oats, milk, kefir, molasses in a jar.',
+        'Fold in cooled egg whites.',
+        'Top with blueberries, walnuts, honey. Seal and refrigerate.',
+        'Eat cold in the morning or microwave 1 min. Make 4 jars Sunday and you\'re set for the week.',
+      ],
+      note: '<strong>Prep once, eat 4 days.</strong> Egg whites nearly double the protein vs plain oats. Off-day focused — lower carbs fit the 2,500 kcal target. On training days add 30g more oats.',
+    },
+    {
+      name: 'Ground Beef Breakfast Scramble',
+      sub: 'Home · 12 min',
+      badges: ['home','train'],
+      macros: {cal:560, p:44, c:36, f:24},
+      nutrients: ['Iron','Zinc','B12','B6','Niacin','Potassium'],
+      fermented: 'Sauerkraut (2 tbsp on the side)',
+      ingredients: [
+        {n:'Lean ground beef (93/7)', a:'150g'},
+        {n:'Whole eggs', a:'2 large'},
+        {n:'Regular potato (diced small)', a:'150g'},
+        {n:'Tomato paste', a:'1 tbsp'},
+        {n:'Spinach', a:'big handful'},
+        {n:'Avocado oil', a:'1 tbsp'},
+        {n:'Sauerkraut', a:'2 tbsp on side'},
+        {n:'Smoked paprika, garlic, salt', a:'to taste'},
+      ],
+      steps: [
+        'Par-cook diced potato in microwave 3 min.',
+        'Brown ground beef in avocado oil with paprika and garlic.',
+        'Add potato, press into pan, let it crisp 2–3 min.',
+        'Stir in tomato paste and spinach, cook 1 min.',
+        'Push to side, scramble eggs in remaining space, fold in.',
+        'Plate with sauerkraut on the side.',
+      ],
+      note: '<strong>Training day power breakfast.</strong> Red meat first thing loads iron, zinc, and B12 early. Tomato paste is a coach-listed micronutrient food — stirs right into the beef. Quick one-pan cook.',
+    },
+    {
+      name: 'Cottage Cheese & Berry Toast',
+      sub: 'No cook · 5 min',
+      badges: ['quick','both'],
+      macros: {cal:410, p:32, c:44, f:10},
+      nutrients: ['Calcium','B12','Selenium','Phosphorus','Riboflavin'],
+      fermented: 'Plain kefir (½ cup on side)',
+      ingredients: [
+        {n:'Sourdough or Ezekiel bread', a:'2 slices toasted'},
+        {n:'Low-fat cottage cheese', a:'150g'},
+        {n:'Blueberries or strawberries', a:'80g'},
+        {n:'Honey', a:'1 tsp drizzle'},
+        {n:'Ground flaxseed', a:'1 tbsp on top'},
+        {n:'Kefir', a:'½ cup on side'},
+      ],
+      steps: [
+        'Toast bread. Spread cottage cheese thick like a schmear.',
+        'Top with berries, flax, honey drizzle.',
+        'Kefir on the side.',
+      ],
+      note: '<strong>Zero cooking, looks restaurant-quality.</strong> Cottage cheese is dairy protein — slower digesting than whey, more micronutrients. Sourdough is the coach\'s preferred bread. Flax adds Omega-3 and fiber. Doubles as a dessert vibe if you make it with strawberries and extra honey.',
+    },
+    {
+      name: 'Egg White Omelette with Green Beans & Potato',
+      sub: 'Home · 15 min',
+      badges: ['home','off'],
+      macros: {cal:380, p:34, c:32, f:10},
+      nutrients: ['B12','Folate','Vit K','Iron','Vit C','Selenium'],
+      fermented: 'Kefir (½ cup) or kombucha',
+      ingredients: [
+        {n:'Egg whites (carton)', a:'200ml (5–6 whites)'},
+        {n:'1 whole egg', a:'for richness'},
+        {n:'Green beans (fresh or frozen)', a:'100g'},
+        {n:'Regular potato (small, boiled/diced)', a:'100g'},
+        {n:'Tomato paste', a:'1 tbsp'},
+        {n:'Olive oil', a:'1 tsp'},
+        {n:'Garlic, salt, pepper', a:'to taste'},
+      ],
+      steps: [
+        'Boil or microwave green beans 3 min until just tender. Do the same for diced potato.',
+        'Whisk egg whites + whole egg with a pinch of salt.',
+        'Sauté green beans, potato, and garlic in olive oil 2 min. Stir in tomato paste.',
+        'Pour egg mixture over veggies, let edges set, fold omelette over.',
+        'Cover and cook 2 min until center is set.',
+      ],
+      note: '<strong>Uses exactly what\'s easy for you</strong> — green beans and potatoes. Egg whites keep calories low for off days while keeping protein high. The whole egg adds yolk nutrition (B12, D, selenium). Tomato paste stirred into the veg is a quick micronutrient boost.',
+    },
+  ],
+  lunch: [
+    {
+      name: 'Ground Beef & Green Bean Rice Bowl',
+      sub: 'Meal prep · 20 min',
+      badges: ['prep','both'],
+      macros: {cal:580, p:44, c:58, f:16},
+      nutrients: ['Iron','Zinc','B12','Vit K','Manganese','Folate'],
+      fermented: 'Kimchi (2 tbsp) or sauerkraut',
+      ingredients: [
+        {n:'Lean ground beef (93/7)', a:'180g'},
+        {n:'White or jasmine rice (cooked)', a:'200g'},
+        {n:'Green beans (fresh or frozen)', a:'150g'},
+        {n:'Tomato paste', a:'2 tbsp'},
+        {n:'Garlic', a:'3 cloves'},
+        {n:'Soy sauce (low sodium)', a:'1 tbsp'},
+        {n:'Avocado oil', a:'1 tbsp'},
+        {n:'Kimchi', a:'2 tbsp on side'},
+      ],
+      steps: [
+        'Brown ground beef in avocado oil with garlic. Season with salt and pepper.',
+        'Add tomato paste, cook 1 min to caramelize slightly.',
+        'Add green beans, toss to coat. Add soy sauce and ¼ cup water, cover 3–4 min until beans are tender.',
+        'Serve over rice with kimchi on the side.',
+        'Scales to 4 servings easily — make a big batch and portion out.',
+      ],
+      note: '<strong>Your old lunch, upgraded.</strong> This is basically your existing routine (chicken + green beans + marinara) but with ground beef instead for higher iron and zinc, and soy sauce + tomato paste as the sauce base. Kimchi handles probiotics. Preps in 20 min for 4 days.',
+    },
+    {
+      name: 'Steak & Sweet Potato Bowl',
+      sub: 'Meal prep · 25 min',
+      badges: ['prep','train'],
+      macros: {cal:660, p:50, c:58, f:20},
+      nutrients: ['Iron','Zinc','B12','Vit A','Potassium','Copper'],
+      fermented: 'Sauerkraut on side',
+      ingredients: [
+        {n:'Lean sirloin or flank steak', a:'200g'},
+        {n:'Sweet potato', a:'200g'},
+        {n:'Spinach or Swiss chard', a:'2 handfuls'},
+        {n:'Olive oil', a:'1 tbsp'},
+        {n:'Garlic', a:'2 cloves'},
+        {n:'Sauerkraut', a:'2 tbsp'},
+        {n:'Salt, pepper, garlic powder', a:'to taste'},
+      ],
+      steps: [
+        'Cube sweet potato, roast at 400°F with olive oil and salt for 20 min.',
+        'Season steak with salt, pepper, garlic powder. Sear in cast iron 3–4 min per side, rest 5 min, slice.',
+        'Sauté greens with garlic 2 min.',
+        'Build bowl: greens → sweet potato → steak slices → sauerkraut.',
+        'Make 4 steaks and portioned sweet potato batches on meal prep day.',
+      ],
+      note: '<strong>Red meat is the #1 protein source.</strong> Sirloin hits iron, zinc, B12 in one shot. Roast a big tray of sweet potato once and use it across 4 meals. Sauerkraut for gut support.',
+    },
+    {
+      name: 'Ground Beef Pasta (Bolognese Bowl)',
+      sub: 'Meal prep · 30 min',
+      badges: ['prep','train'],
+      macros: {cal:700, p:48, c:72, f:20},
+      nutrients: ['Iron','Zinc','B12','B6','Niacin','Manganese'],
+      fermented: 'Sauerkraut on side',
+      ingredients: [
+        {n:'Lean ground beef (93/7)', a:'180g'},
+        {n:'Pasta (penne or rigatoni)', a:'120g dry'},
+        {n:'Tomato paste', a:'2 tbsp'},
+        {n:'Crushed tomatoes', a:'200g'},
+        {n:'Spinach', a:'2 handfuls'},
+        {n:'Garlic', a:'3 cloves'},
+        {n:'Olive oil', a:'1 tbsp'},
+        {n:'Nutritional yeast (unfortified)', a:'1 tbsp'},
+        {n:'Italian seasoning, chili flakes', a:'to taste'},
+      ],
+      steps: [
+        'Cook pasta. Reserve ¼ cup pasta water.',
+        'Brown beef in olive oil with garlic. Add tomato paste, cook 2 min to deepen the flavor.',
+        'Add crushed tomatoes, simmer 10 min. Stir in spinach and nutritional yeast at the end.',
+        'Toss pasta in sauce with pasta water to coat.',
+        'Makes 4 containers. Reheats perfectly.',
+      ],
+      note: '<strong>Nutritional yeast (unfortified)</strong> is on your coach\'s micronutrient list — huge B-vitamin density. Tomato paste + crushed tomato amplifies iron absorption via Vit C. Highest-carb lunch — ideal on heavy training days.',
+    },
+    {
+      name: 'Tuna, White Bean & Avocado Bowl',
+      sub: 'No cook · 5 min',
+      badges: ['quick','off'],
+      macros: {cal:490, p:40, c:34, f:18},
+      nutrients: ['Omega-3','Selenium','B12','Iron','Folate','Vit E'],
+      fermented: 'Kombucha (drink alongside)',
+      ingredients: [
+        {n:'Canned tuna in olive oil (drained)', a:'150g'},
+        {n:'Canned white beans (rinsed)', a:'100g'},
+        {n:'Avocado (½)', a:'diced'},
+        {n:'Cherry tomatoes', a:'8–10 halved'},
+        {n:'Spinach or mixed greens', a:'big handful'},
+        {n:'Lemon juice + olive oil', a:'1 tbsp each'},
+        {n:'Salt, pepper', a:'to taste'},
+      ],
+      steps: [
+        'Open cans. Rinse beans. Drain tuna.',
+        'Combine everything in a bowl or container, dress with lemon juice and olive oil.',
+        'Done. Pack in a container for campus.',
+      ],
+      note: '<strong>Zero cooking.</strong> Tuna in olive oil already has a great fat profile. White beans add slow-digesting carbs and folate. Avocado = monounsaturated fat. This takes literally 5 min and travels great in a container.',
+    },
+    {
+      name: 'Potato & Green Bean Beef Stew',
+      sub: 'Meal prep · 35 min',
+      badges: ['prep','both'],
+      macros: {cal:550, p:42, c:50, f:16},
+      nutrients: ['Iron','Zinc','Potassium','Vit C','B12','Manganese'],
+      fermented: 'Kefir (½ cup) or sauerkraut',
+      ingredients: [
+        {n:'Lean ground beef or stew beef', a:'200g'},
+        {n:'Regular potatoes (cubed)', a:'250g'},
+        {n:'Green beans (fresh or frozen)', a:'150g'},
+        {n:'Crushed tomatoes', a:'200g'},
+        {n:'Tomato paste', a:'2 tbsp'},
+        {n:'Garlic', a:'3 cloves'},
+        {n:'Beef or chicken broth', a:'1 cup'},
+        {n:'Olive oil', a:'1 tbsp'},
+        {n:'Italian seasoning, salt', a:'to taste'},
+      ],
+      steps: [
+        'Brown beef in olive oil with garlic in a pot. Season well.',
+        'Add tomato paste, stir 1 min.',
+        'Add potatoes, green beans, crushed tomatoes, broth.',
+        'Simmer 20–25 min until potatoes are fully tender.',
+        'Portion into 4 containers. Tastes even better day 2.',
+      ],
+      note: '<strong>Uses exactly what you said is easy</strong> — potatoes, green beans, ground beef. Comfort food that hits macro and micro targets. Filling, cheap, and incredibly easy to batch cook. Add a piece of sourdough on training days to push carbs up.',
+    },
+    {
+      name: 'Egg Fried Rice with Beef',
+      sub: 'Meal prep · 20 min',
+      badges: ['prep','train'],
+      macros: {cal:620, p:40, c:70, f:16},
+      nutrients: ['B12','Iron','Selenium','Riboflavin','Phosphorus','Zinc'],
+      fermented: 'Kimchi (big side portion)',
+      ingredients: [
+        {n:'Lean ground beef', a:'150g'},
+        {n:'Day-old cooked rice (cold)', a:'250g'},
+        {n:'Eggs', a:'3 whole'},
+        {n:'Green beans or spinach', a:'100g'},
+        {n:'Soy sauce (low sodium)', a:'2 tbsp'},
+        {n:'Sesame oil', a:'1 tsp finish'},
+        {n:'Avocado oil', a:'1 tbsp cooking'},
+        {n:'Garlic', a:'2 cloves'},
+        {n:'Kimchi', a:'large side or mixed in'},
+      ],
+      steps: [
+        'Use cold day-old rice — fresh rice gets mushy.',
+        'Brown beef with garlic in avocado oil, push to the side.',
+        'Add green beans or spinach, cook 2 min.',
+        'Push everything to sides, scramble eggs in center until just set.',
+        'Add rice, toss everything together. Add soy sauce, toss.',
+        'Finish with sesame oil. Serve with kimchi.',
+      ],
+      note: '<strong>Excellent training day lunch.</strong> Cold leftover rice fries better than fresh. Kimchi mixed in at the end makes it Korean-style fried rice — genuinely delicious. Make 4 servings at once easily.',
+    },
+  ],
+  dinner: [
+    {
+      name: 'Pan-Seared Salmon with Roasted Potatoes & Chard',
+      sub: 'Home · 25 min',
+      badges: ['home','both'],
+      macros: {cal:620, p:46, c:44, f:26},
+      nutrients: ['Omega-3','B12','Vit D','Selenium','Potassium','Vit K'],
+      fermented: 'Small glass of kefir or kimchi side',
+      ingredients: [
+        {n:'Salmon fillet (skin-on)', a:'200g'},
+        {n:'Baby potatoes or regular potato', a:'200g halved/cubed'},
+        {n:'Swiss chard or spinach', a:'3 big handfuls'},
+        {n:'Avocado oil', a:'2 tbsp'},
+        {n:'Garlic', a:'3 cloves'},
+        {n:'Lemon', a:'1'},
+        {n:'Walnuts (crushed)', a:'15g on chard'},
+        {n:'Salt, pepper, dill', a:'to taste'},
+      ],
+      steps: [
+        'Toss potatoes with 1 tbsp avocado oil, salt, pepper. Roast at 425°F for 22–25 min.',
+        'Pat salmon dry, season with salt, pepper, lemon zest.',
+        'Heat oil in skillet on high. Lay salmon skin-down, press 1 min. Reduce to medium, cook 5–6 min. Flip, 1 min.',
+        'Sauté chard with garlic 2–3 min, finish with lemon juice and crushed walnuts.',
+        'Plate potatoes, chard, salmon.',
+      ],
+      note: '<strong>Salmon + Swiss chard + walnuts</strong> is one of the most micronutrient-dense combinations you can put on a plate. Covers Omega-3, B12, D, K, manganese in one meal. Regular potatoes work just as well as baby potatoes here.',
+    },
+    {
+      name: 'Beef & Potato Skillet Dinner',
+      sub: 'Home · 20 min',
+      badges: ['home','both'],
+      macros: {cal:600, p:46, c:50, f:20},
+      nutrients: ['Iron','Zinc','B12','Potassium','B6','Niacin'],
+      fermented: 'Sauerkraut (2 tbsp) or kefir',
+      ingredients: [
+        {n:'Lean ground beef (93/7)', a:'200g'},
+        {n:'Regular potatoes (diced)', a:'250g'},
+        {n:'Green beans', a:'100g'},
+        {n:'Tomato paste', a:'2 tbsp'},
+        {n:'Garlic', a:'3 cloves'},
+        {n:'Avocado oil', a:'1 tbsp'},
+        {n:'Beef broth', a:'¼ cup'},
+        {n:'Smoked paprika, salt, pepper', a:'to taste'},
+        {n:'Sauerkraut', a:'2 tbsp on side'},
+      ],
+      steps: [
+        'Par-cook diced potato in microwave 4 min.',
+        'Brown beef in avocado oil with garlic and paprika.',
+        'Add potato, press flat into pan, let crisp 3 min.',
+        'Add green beans, tomato paste, and broth. Toss everything, cover 3 min.',
+        'Plate with sauerkraut on side.',
+      ],
+      note: '<strong>Weeknight staple.</strong> One pan, 20 min, uses your easy ingredients. Ground beef + potato + green beans is a combination that works for every day of the week without getting boring — change the seasoning profile (Italian, Mexican, Asian) and it\'s a different meal.',
+    },
+    {
+      name: 'Beef Stir-Fry with Rice',
+      sub: 'Home · 20 min',
+      badges: ['home','train'],
+      macros: {cal:680, p:50, c:65, f:18},
+      nutrients: ['Iron','Zinc','B12','Vit C','Folate','Copper'],
+      fermented: 'Kimchi (big side)',
+      ingredients: [
+        {n:'Flank or sirloin steak (thin sliced)', a:'200g'},
+        {n:'Jasmine rice (cooked)', a:'200g'},
+        {n:'Green beans or bok choy', a:'150g'},
+        {n:'Garlic + ginger', a:'2 cloves + 1 tsp'},
+        {n:'Soy sauce (low sodium)', a:'2 tbsp'},
+        {n:'Sesame oil', a:'1 tsp finish'},
+        {n:'Avocado oil', a:'1 tbsp cooking'},
+        {n:'Kimchi', a:'big side or mix in'},
+      ],
+      steps: [
+        'Marinate sliced steak in soy sauce, garlic, ginger 10+ min (or morning of).',
+        'Wok or skillet blazing hot. Sear steak in one layer, 1 min per side. Remove.',
+        'Stir fry green beans 2–3 min in same pan.',
+        'Add steak back, toss. Drizzle sesame oil.',
+        'Serve over rice with kimchi.',
+      ],
+      note: '<strong>Best training day dinner.</strong> High carb, high protein, iron from steak. Marinate in the morning when you\'re making breakfast and the cook literally takes 10 min at night.',
+    },
+    {
+      name: 'Baked Cod with Lentils & Green Beans',
+      sub: 'Home · 30 min',
+      badges: ['home','off'],
+      macros: {cal:500, p:50, c:40, f:10},
+      nutrients: ['Selenium','B12','Iron','Folate','Phosphorus','Vit K'],
+      fermented: 'Greek yogurt dressing (½ cup 0% + lemon + garlic)',
+      ingredients: [
+        {n:'Cod fillet', a:'220g'},
+        {n:'Canned lentils (rinsed)', a:'150g'},
+        {n:'Green beans (fresh or frozen)', a:'120g'},
+        {n:'Crushed tomatoes', a:'150g'},
+        {n:'Garlic', a:'2 cloves'},
+        {n:'Olive oil', a:'1 tbsp'},
+        {n:'Smoked paprika, cumin', a:'½ tsp each'},
+        {n:'0% Greek yogurt for sauce', a:'½ cup'},
+        {n:'Lemon', a:'1'},
+      ],
+      steps: [
+        'Sauté garlic in oil, add crushed tomatoes, lentils, green beans, spices. Simmer 8 min.',
+        'Lay cod on top, season with salt, pepper, lemon zest.',
+        'Bake at 400°F for 14–16 min.',
+        'Mix Greek yogurt with lemon juice + garlic powder for the sauce.',
+        'Serve cod over lentil-bean base, spoon yogurt sauce over.',
+      ],
+      note: '<strong>Off day fish dinner.</strong> Lentils are the best legume for folate, iron, and manganese. Cod is lean and high selenium. Greek yogurt sauce doubles as your fermented food component. Green beans add Vit K and are easy to have on hand.',
+    },
+    {
+      name: 'Egg & Veggie Frittata',
+      sub: 'Home or prep · 25 min',
+      badges: ['home','prep','off'],
+      macros: {cal:460, p:38, c:24, f:22},
+      nutrients: ['Vit D','B12','Riboflavin','Vit A','Vit K','Selenium'],
+      fermented: 'Kefir (½ cup alongside)',
+      ingredients: [
+        {n:'Whole eggs', a:'5 large'},
+        {n:'Spinach', a:'3 handfuls'},
+        {n:'Cherry tomatoes or tomato paste', a:'100g or 2 tbsp'},
+        {n:'Regular potato (thinly sliced)', a:'100g'},
+        {n:'Green beans', a:'80g'},
+        {n:'Nutritional yeast', a:'2 tbsp'},
+        {n:'Avocado oil', a:'1 tbsp'},
+        {n:'Salt, pepper, herbs', a:'to taste'},
+      ],
+      steps: [
+        'Preheat oven to 375°F.',
+        'Sauté sliced potato in oven-safe skillet 5–6 min. Add green beans and spinach, cook 2 min.',
+        'Whisk eggs with nutritional yeast, salt, pepper. Pour over veggies.',
+        'Cook on stovetop 3 min until edges set. Transfer to oven 12–14 min.',
+        'Slice into wedges. Keeps 4 days — eat cold or reheated.',
+      ],
+      note: '<strong>Prep once, eat all week.</strong> Slice and pack — cold frittata is legitimately good. Nutritional yeast adds B-vitamins. Uses your easy ingredients (potato, green beans) plus eggs which your coach ranks top-tier.',
+    },
+    {
+      name: 'Chipotle-Style Rice Bowl (Home)',
+      sub: 'Home · 20 min',
+      badges: ['home','train'],
+      macros: {cal:680, p:48, c:72, f:16},
+      nutrients: ['Iron','Zinc','B12','Folate','Potassium','Vit C'],
+      fermented: 'Salsa with live cultures or kefir',
+      ingredients: [
+        {n:'Lean ground beef or steak strips', a:'200g'},
+        {n:'White rice (cooked)', a:'200g'},
+        {n:'Black beans (canned, rinsed)', a:'100g'},
+        {n:'Spinach or romaine', a:'big handful'},
+        {n:'Salsa (jar)', a:'3 tbsp'},
+        {n:'Avocado (½)', a:'sliced'},
+        {n:'Greek yogurt (sub for sour cream)', a:'2 tbsp'},
+        {n:'Lime juice, cumin, garlic', a:'to taste'},
+      ],
+      steps: [
+        'Season and brown beef/steak strips with cumin, garlic, salt.',
+        'Layer bowl: rice → beans → beef → spinach → salsa → avocado → yogurt.',
+        'Squeeze lime over.',
+      ],
+      note: '<strong>You already eat Chipotle during the week.</strong> This is a home version that costs a fraction of the price, has better macros, and only takes 20 min. Black beans add folate and iron. Greek yogurt instead of sour cream adds protein and probiotics.',
+    },
+  ],
+  snacks: [
+    {
+      name: 'Walnut & Blueberry Kefir Bowl',
+      sub: 'No cook · 3 min',
+      badges: ['quick','both'],
+      macros: {cal:280, p:14, c:24, f:14},
+      nutrients: ['Omega-3','Probiotics','Vit C','Manganese','Vit K'],
+      fermented: 'Kefir IS the base',
+      ingredients: [
+        {n:'Plain kefir', a:'250ml'},
+        {n:'Blueberries', a:'80g'},
+        {n:'Walnuts', a:'20g'},
+        {n:'Blackstrap molasses', a:'1 tsp'},
+        {n:'Honey', a:'½ tsp'},
+      ],
+      steps: ['Pour kefir. Top with everything. Done.'],
+      note: '<strong>Your default between-meal snack.</strong> Gut support, Omega-3, iron, antioxidants, zero prep.',
+    },
+    {
+      name: 'Hard-Boiled Eggs & Avocado',
+      sub: 'Prep ahead · 2 min to assemble',
+      badges: ['prep','quick','off'],
+      macros: {cal:320, p:20, c:8, f:24},
+      nutrients: ['Vit D','B12','Vit E','Folate','Copper','Selenium'],
+      fermented: 'Sauerkraut (2 tbsp on the side)',
+      ingredients: [
+        {n:'Hard-boiled eggs', a:'3 large'},
+        {n:'Avocado (½)', a:'sliced'},
+        {n:'Sauerkraut', a:'2 tbsp'},
+        {n:'Salt, pepper, chili flakes', a:'to taste'},
+      ],
+      steps: [
+        'Batch-boil 8–10 eggs Sunday. Ice bath, peel, refrigerate.',
+        'When snack time hits: slice eggs and avocado, add sauerkraut.',
+      ],
+      note: '<strong>Total prep time on eating day: 2 min.</strong> Pack eggs and avocado in a container for campus. Off-day focused — high fat, moderate protein, minimal carbs.',
+    },
+    {
+      name: 'Greek Yogurt + Berries + Flax',
+      sub: 'No cook · 2 min',
+      badges: ['quick','both'],
+      macros: {cal:260, p:22, c:26, f:7},
+      nutrients: ['Probiotics','Calcium','Omega-3','Vit C','Manganese'],
+      fermented: 'Greek yogurt IS the base',
+      ingredients: [
+        {n:'0% Greek yogurt', a:'200g'},
+        {n:'Blueberries or mixed berries', a:'80g'},
+        {n:'Ground flaxseed', a:'1 tbsp'},
+        {n:'Walnuts', a:'10g'},
+        {n:'Honey', a:'1 tsp'},
+      ],
+      steps: ['Spoon yogurt, top with everything, pre-portion into container for on-the-go.'],
+      note: '<strong>Your current habit, upgraded.</strong> Ground flax adds Omega-3 + fiber. Walnuts add poly fats and manganese.',
+    },
+    {
+      name: 'Cottage Cheese & Pineapple Cup',
+      sub: 'No cook · 2 min',
+      badges: ['quick','both'],
+      macros: {cal:240, p:24, c:22, f:4},
+      nutrients: ['Calcium','B12','Selenium','Phosphorus','Vit C'],
+      fermented: 'Kombucha (small can alongside)',
+      ingredients: [
+        {n:'Low-fat cottage cheese', a:'200g'},
+        {n:'Pineapple chunks (canned in juice)', a:'80g drained'},
+        {n:'Honey', a:'½ tsp'},
+        {n:'Cinnamon', a:'pinch'},
+      ],
+      steps: ['Mix or layer. Pack in container.'],
+      note: '<strong>Tastes like a dessert.</strong> Cottage cheese is slow-digesting dairy protein. Pineapple adds Vit C and a tropical sweetness that makes this feel like a treat, not a diet food. Easy to buy pre-portioned cottage cheese cups.',
+    },
+    {
+      name: 'Carrot Juice + Walnut Mix',
+      sub: 'No cook · 2 min',
+      badges: ['quick','both'],
+      macros: {cal:220, p:5, c:22, f:14},
+      nutrients: ['Vit A','Vit K','Manganese','Omega-3','Copper'],
+      fermented: 'Kombucha (small can alongside)',
+      ingredients: [
+        {n:'Carrot juice', a:'240ml'},
+        {n:'Walnuts', a:'25g'},
+        {n:'Pumpkin seeds', a:'15g'},
+        {n:'Kombucha', a:'small can'},
+      ],
+      steps: ['Pre-bag the nuts. Grab carrot juice and kombucha from fridge.'],
+      note: '<strong>Carrot juice is on your coach\'s micronutrient list.</strong> High Vit A, K, potassium. The nut mix + kombucha covers poly fats and gut support. Easy to pack and eat between classes.',
+    },
+  ],
+  desserts: [
+    {
+      name: 'Honey Ricotta & Berry Bowl',
+      sub: 'No cook · 3 min',
+      badges: ['quick','both'],
+      macros: {cal:290, p:16, c:30, f:10},
+      nutrients: ['Calcium','Probiotics','Vit C','Selenium','Riboflavin'],
+      fermented: 'Use kefir-strained ricotta or add splash of kefir',
+      ingredients: [
+        {n:'Part-skim ricotta', a:'150g'},
+        {n:'Blueberries or strawberries', a:'80g'},
+        {n:'Honey', a:'2 tsp drizzle'},
+        {n:'Walnuts (crushed)', a:'15g'},
+        {n:'Cinnamon', a:'pinch'},
+        {n:'Vanilla extract', a:'few drops optional'},
+      ],
+      steps: [
+        'Spoon ricotta into a bowl, smooth it out.',
+        'Top with berries, crushed walnuts, cinnamon.',
+        'Drizzle honey and vanilla.',
+      ],
+      note: '<strong>Feels completely indulgent.</strong> Ricotta is slow-digesting dairy protein — this is effectively a dessert that hits protein targets. Honey + berries = natural sweetness. Walnuts add crunch and poly fats. Zero guilt.',
+    },
+    {
+      name: 'Dark Chocolate Walnut & Berry Plate',
+      sub: 'No cook · 2 min',
+      badges: ['quick','both'],
+      macros: {cal:260, p:5, c:24, f:16},
+      nutrients: ['Manganese','Copper','Magnesium','Omega-3','Iron'],
+      fermented: 'Kefir (small cup) alongside',
+      ingredients: [
+        {n:'Dark chocolate (85%+)', a:'25g (3–4 squares)'},
+        {n:'Walnuts', a:'20g'},
+        {n:'Blueberries or raspberries', a:'80g'},
+        {n:'Kefir', a:'small cup alongside'},
+      ],
+      steps: ['Put on a plate. Eat it. This counts as a meal component.'],
+      note: '<strong>The sweet fix without the fallout.</strong> 85%+ dark chocolate has meaningful magnesium, iron, and manganese. Walnuts = Omega-3 + poly fats. Berries = antioxidants. Kefir handles the probiotic requirement. If you want ice cream night, have a smaller portion of this first — you\'ll want less.',
+    },
+    {
+      name: 'Banana "Nice Cream" with Walnuts',
+      sub: 'Prep ahead · 5 min + freeze',
+      badges: ['prep','both'],
+      macros: {cal:310, p:8, c:52, f:10},
+      nutrients: ['Potassium','B6','Vit C','Manganese','Omega-3'],
+      fermented: 'Splash of kefir blended in (optional)',
+      ingredients: [
+        {n:'Frozen bananas', a:'2 medium, sliced before freezing'},
+        {n:'Walnuts', a:'20g'},
+        {n:'Honey', a:'1 tsp'},
+        {n:'Cinnamon', a:'½ tsp'},
+        {n:'Kefir', a:'2 tbsp optional for creaminess'},
+      ],
+      steps: [
+        'Peel and slice bananas, freeze in a bag the night before.',
+        'Blend frozen banana in a food processor or blender until smooth and creamy — it takes 2–3 min.',
+        'Stir in cinnamon, honey, kefir if using.',
+        'Top with crushed walnuts. Eat immediately or refreeze for firmer texture.',
+      ],
+      note: '<strong>Literally ice cream texture</strong>, no dairy, no added sugar beyond honey. Bananas are high in potassium and B6. Walnuts add the crunch and poly fats. Freeze a bunch of bananas Sunday and you have this dessert ready to blend any night.',
+    },
+    {
+      name: 'Greek Yogurt Bark (Frozen)',
+      sub: 'Prep ahead · 5 min + 2 hr freeze',
+      badges: ['prep','both'],
+      macros: {cal:270, p:20, c:30, f:8},
+      nutrients: ['Calcium','Probiotics','Vit C','Manganese','Omega-3'],
+      fermented: 'Greek yogurt IS the base',
+      ingredients: [
+        {n:'0% Greek yogurt', a:'300g'},
+        {n:'Honey', a:'2 tbsp'},
+        {n:'Blueberries', a:'80g'},
+        {n:'Walnuts (crushed)', a:'20g'},
+        {n:'Dark chocolate chips', a:'1 tbsp'},
+        {n:'Blackstrap molasses', a:'1 tsp stirred in'},
+      ],
+      steps: [
+        'Mix yogurt with honey and molasses.',
+        'Spread about ½ inch thick on a parchment-lined baking sheet.',
+        'Scatter blueberries, walnuts, chocolate chips on top.',
+        'Freeze 2+ hours until solid.',
+        'Break into pieces. Store frozen in a bag. Lasts 2 weeks.',
+      ],
+      note: '<strong>Batch prep once, dessert for 2 weeks.</strong> Frozen yogurt bark is genuinely satisfying and cold like ice cream. Chocolate chips, molasses, and honey make it sweet enough that it doesn\'t feel like health food. Breaks into pieces you can grab from the freezer any time.',
+    },
+    {
+      name: 'Peanut Butter & Honey Rice Cakes',
+      sub: 'No cook · 2 min',
+      badges: ['quick','both'],
+      macros: {cal:320, p:12, c:38, f:14},
+      nutrients: ['Niacin','B3','Vit E','Manganese','Folate'],
+      fermented: 'Kefir (small cup) alongside',
+      ingredients: [
+        {n:'Rice cakes (plain)', a:'3 cakes'},
+        {n:'Natural peanut butter', a:'2 tbsp'},
+        {n:'Honey', a:'1 tsp'},
+        {n:'Banana (sliced)', a:'½ optional'},
+        {n:'Cinnamon', a:'pinch'},
+      ],
+      steps: [
+        'Spread peanut butter on rice cakes.',
+        'Drizzle honey, add banana slices if using, dust cinnamon.',
+      ],
+      note: '<strong>Simplest sweet fix there is.</strong> Natural peanut butter is a good mono fat source with niacin and B3. Rice cakes are already in your pre-workout pantry. Honey for sweetness. Banana optional but adds potassium and makes it feel more substantial. Takes 2 min.',
+    },
+    {
+      name: 'Blueberry Cottage Cheese Mousse',
+      sub: 'No cook · 5 min',
+      badges: ['quick','prep','off'],
+      macros: {cal:250, p:24, c:22, f:6},
+      nutrients: ['Calcium','Selenium','B12','Vit C','Riboflavin','Folate'],
+      fermented: 'Kefir (1 tbsp blended in)',
+      ingredients: [
+        {n:'Low-fat cottage cheese', a:'200g'},
+        {n:'Blueberries', a:'80g'},
+        {n:'Honey', a:'1 tbsp'},
+        {n:'Kefir', a:'1 tbsp'},
+        {n:'Vanilla extract', a:'½ tsp'},
+        {n:'Lemon zest', a:'pinch'},
+      ],
+      steps: [
+        'Blend all ingredients in a blender or with an immersion blender 30 seconds until smooth.',
+        'Pour into a glass or bowl. Top with a few whole blueberries.',
+        'Refrigerate until ready to eat — firms up nicely after 30 min.',
+      ],
+      note: '<strong>Tastes like blueberry cheesecake filling.</strong> Blending cottage cheese removes the texture issue most people have with it. This is protein-rich dessert that hits calcium, selenium, and B12 while genuinely tasting like a treat. Make 2–3 portions at once.',
+    },
+  ],
+};
+
+
+let activeMealTab = 'breakfast';
+let openMeals = {};
+
+function setMealTab(tab) {
+  activeMealTab = tab;
+  document.querySelectorAll('.mstab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.meal-panel').forEach(p => p.classList.toggle('active', p.id === 'mp-' + tab));
+}
+
+function togMeal(id) {
+  openMeals[id] = !openMeals[id];
+  const body = document.getElementById('mb-' + id);
+  const icon = document.getElementById('mi-' + id);
+  if (body) body.classList.toggle('open', openMeals[id]);
+  if (icon) icon.style.transform = openMeals[id] ? 'rotate(90deg)' : '';
+}
+
+function buildMealPanel(tab, list) {
+  return `<div class="meal-panel${tab === activeMealTab ? ' active' : ''}" id="mp-${tab}">
+    ${list.map((m, i) => {
+      const id = tab + i;
+      const badgeHtml = m.badges.map(b => {
+        const labels = {home:'cook fresh', prep:'meal prep', quick:'no cook', train:'training day', off:'off day', both:'any day'};
+        const cls = {home:'mb-home', prep:'mb-prep', quick:'mb-quick', train:'mb-train', off:'mb-off', both:'mb-both'};
+        return `<span class="meal-badge ${cls[b]}">${labels[b]}</span>`;
+      }).join('');
+      return `<div class="meal-card">
+        <div class="meal-card-header" onclick="togMeal('${id}')">
+          <div class="meal-card-left">
+            <div class="meal-card-name">${m.name}</div>
+            <div class="meal-card-sub">${m.sub}</div>
+            <div class="meal-badge-row">${badgeHtml}</div>
+          </div>
+          <span class="meal-expand-icon" id="mi-${id}">›</span>
+        </div>
+        <div class="meal-body" id="mb-${id}">
+          <div class="meal-macros-row">
+            <span class="mmac mmac-cal">${m.macros.cal} kcal</span>
+            <span class="mmac mmac-p">${m.macros.p}g protein</span>
+            <span class="mmac mmac-c">${m.macros.c}g carbs</span>
+            <span class="mmac mmac-f">${m.macros.f}g fat</span>
+          </div>
+          <div class="meal-section-head">Ingredients</div>
+          ${m.ingredients.map(ing => `<div class="meal-ing-row"><span class="meal-ing-name">${ing.n}</span><span class="meal-ing-amt">${ing.a}</span></div>`).join('')}
+          <div class="meal-section-head">Method</div>
+          <div class="meal-steps">
+            ${m.steps.map((s, si) => `<div class="meal-step"><span class="step-num">${si + 1}</span><span>${s}</span></div>`).join('')}
+          </div>
+          <div class="meal-section-head">Key nutrients hit</div>
+          <div class="nutrient-highlights">
+            ${m.nutrients.map(n => `<span class="nh-pill">${n}</span>`).join('')}
+            <span class="nh-pill" style="color:var(--teal)">🦠 ${m.fermented}</span>
+          </div>
+          <div class="meal-note-box">${m.note}</div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  END-OF-DAY CALORIE LOG (manual Cronometer entry → Drive sync)
+// ════════════════════════════════════════════════════════════
+function showCalLog() {
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
+  const existing = tData[curWeek]?.[today.getDay()] ?? {};
+  const modal = document.getElementById('calLogModal');
+  document.getElementById('calLogDate').textContent = dateStr;
+  document.getElementById('calLogInput').value = existing.cal || '';
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('calLogInput').focus(), 100);
+}
+
+function closeCalLog() {
+  document.getElementById('calLogModal').style.display = 'none';
+}
+
+async function submitCalLog() {
+  const val = parseFloat(document.getElementById('calLogInput').value);
+  if (isNaN(val) || val < 100) { alert('Enter a valid calorie number'); return; }
+
+  const today = new Date();
+  const dayIdx = today.getDay();
+  updateField(curWeek, dayIdx, 'cal', val);
+  closeCalLog();
+
+  // Trigger Drive sync immediately
+  await syncToDrive();
+}
+
+// ════════════════════════════════════════════════════════════
+//  PWA SERVICE WORKER
+// ════════════════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'fit-tracker-v1';
+    const ASSETS = [self.location.pathname];
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))));
+      self.clients.claim();
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match(e.request))));
+    });
+  `;
+  const blob = new Blob([swCode], {type: 'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(() => {});
+}
+
+
+// ════════════════════════════════════════════════════════════
+//  GROCERY LIST
+// ════════════════════════════════════════════════════════════
+const GROCERY = {
+  costco: {
+    label: 'Costco',
+    sub: 'Bulk staples — buy once, last weeks',
+    color: 'var(--blue)',
+    color2: 'var(--blue2)',
+    categories: [
+      { cat: 'Protein (Coach Priority: Red Meat, Eggs, Dairy, Fish)', items: [
+        'Lean ground beef 93/7 — large pack, portion & freeze (4-5 meals/pack)',
+        'Sirloin or flank steak — bulk pack, freeze individually',
+        'Salmon fillets — frozen individually wrapped (Kirkland)',
+        'Cod fillets — frozen bag',
+        'Whole eggs — 5 dozen pack',
+        'Egg whites — large carton (2-pack)',
+        'Plain Greek yogurt 0% — large tub (Kirkland)',
+        'Cottage cheese low-fat — large tub',
+        'Whole milk — 2 gallon pack',
+        'Whey protein powder — large bag',
+        'EAA powder',
+        'Canned tuna in water or olive oil — case of 24',
+      ]},
+      { cat: 'Carbs (Coach: Sourdough, Rice, Potatoes, Pasta, Legumes)', items: [
+        'Jasmine or white rice — 25lb bag',
+        'Pasta penne or rigatoni — multi-pack',
+        'Rolled oats — large canister',
+        'Cream of rice — large canister (Bob\'s Red Mill)',
+        'Rice cakes plain — large bag',
+        'Sourdough bread — 2-pack loaves',
+        'Canned crushed tomatoes — case of 6',
+        'Tomato paste — 12-pack',
+        'Canned black beans — case of 12',
+        'Canned white beans — case of 12',
+        'Canned lentils — case of 12',
+        'Canned chickpeas — case of 12',
+        'Potatoes (Russet or Yukon Gold) — 10lb bag',
+        'Sweet potatoes — large bag',
+      ]},
+      { cat: 'Fats (Coach: Mono/Poly Priority)', items: [
+        'Avocado oil — large bottle (Kirkland)',
+        'Olive oil extra virgin — 3L bottle (Kirkland)',
+        'Walnuts — large bag (top poly fat per coach)',
+        'Natural peanut butter — 2-pack',
+        'Avocados — bag of 8-10',
+        'Almonds — large bag',
+        'Cashews — large bag',
+        'Hemp seeds — large bag',
+        'Flaxseed ground — large bag',
+        'Sunflower seeds — large bag',
+        'Pumpkin seeds — large bag',
+        'Macadamia nuts — large bag',
+      ]},
+      { cat: 'Frozen Produce & Fruit', items: [
+        'Frozen blueberries — large bag (coach #1 berry)',
+        'Frozen mixed berries — large bag',
+        'Frozen green beans — large bag',
+        'Frozen spinach — multi-pack',
+        'Frozen broccoli — large bag',
+        'Frozen bananas (pre-slice before freezing for nice cream)',
+        'Mixed berries for post-workout',
+      ]},
+      { cat: 'Dairy & Fermented', items: [
+        'Whole milk — gallon 2-pack',
+        'Skim milk powder — large bag (Kirkland or Bob\'s Red Mill)',
+        'Kefir plain — large bottle',
+        'Cottage cheese — 2-pack tubs',
+      ]},
+      { cat: 'Peri-Workout Staples', items: [
+        'Karbolyn or HBCD powder',
+        'Coconut water — case of 330ml or 500ml cans',
+        'Pomegranate juice — case of bottles (required every pre-workout)',
+        'Honey — large jar (coach-listed carb + micronutrient source)',
+        'Blackstrap molasses — large jar (iron, potassium, calcium, magnesium)',
+      ]},
+      { cat: 'Pantry Seasonings & Condiments', items: [
+        'Garlic powder — large container',
+        'Smoked paprika — large container',
+        'Italian seasoning blend — large container',
+        'Cumin — large container',
+        'Onion powder — large container',
+        'Black pepper — large grinder',
+        'Kosher or sea salt — large container',
+        'Chili flakes — large container',
+        'Cinnamon — large container',
+        'Low-sodium soy sauce — large bottle',
+        'Hot sauce (Frank\'s or similar) — large bottle',
+        'Beef broth — case of cartons',
+        'Chicken broth — case of cartons',
+      ]},
+    ]
+  },
+  wegmans: {
+    label: 'Wegmans',
+    sub: 'Fresh produce, specialty & fermented',
+    color: 'var(--accent)',
+    color2: 'var(--accent2)',
+    categories: [
+      { cat: 'Fresh Produce (Coach Micronutrient List)', items: [
+        'Potatoes Russet or Yukon Gold — 5lb bag (coach-listed micro food)',
+        'Sweet potatoes — individual',
+        'Spinach — large clamshell (coach #1 leafy green)',
+        'Swiss chard — bunch (coach-listed micronutrient food)',
+        'Tomatoes or cherry tomatoes',
+        'Tomato paste tubes — for convenience',
+        'Avocados — individual ripe',
+        'Blueberries — fresh pints (coach #1 berry)',
+        'Strawberries, raspberries',
+        'Kiwi fruit — 4-pack (coach-listed micro food)',
+        'Bananas — bunch',
+        'Garlic bulbs — loose',
+        'Lemons — bag',
+        'Ginger root',
+        'Green beans — fresh or loose',
+        'Bok choy or broccoli',
+        'Carrot juice — refrigerated (coach-listed micronutrient food)',
+      ]},
+      { cat: 'Fermented / Probiotic (Coach: Include With All Meals)', items: [
+        'Plain kefir — Lifeway or store brand (dairy or water kefir)',
+        'Sauerkraut — refrigerated with live cultures (NOT canned/shelf stable)',
+        'Kimchi — refrigerated',
+        'Kombucha — GT\'s or store brand, low sugar or plain',
+        '0% Greek yogurt — Fage Total or Chobani',
+        'Part-skim ricotta',
+      ]},
+      { cat: 'Specialty Protein (Coach: Prioritize Over Chicken)', items: [
+        'Smoked salmon (Nova lox style — no cook, high Omega-3)',
+        'Fresh cod or halibut fillet',
+        'Fresh salmon fillet',
+        'Canned tuna in olive oil — Wegmans brand or Tonnino',
+        'Whole eggs — if running low',
+      ]},
+      { cat: 'Bread & Grains (Coach: Sourdough + Ezekiel Priority)', items: [
+        'Sourdough loaf — Wegmans bakery (slow-digesting, coach preferred)',
+        'Ezekiel bread — Food for Life, freezer section',
+        'Non-fortified corn flakes — for post-workout cereal',
+        'Non-fortified rice cereal — post-workout option',
+      ]},
+      { cat: 'Micronutrient-Dense Pantry (Coach Listed)', items: [
+        'Nutritional yeast unfortified — Bragg or bulk bin (B-vitamins)',
+        'Ground flaxseed — Bob\'s Red Mill (Omega-3)',
+        'Black seed oil — very small bottle, use 1g/day max (coach-listed)',
+        'Dark chocolate 85%+ — Green & Black\'s or Lindt (magnesium, iron)',
+        'Sesame oil — small bottle for finishing',
+        'Vanilla extract — pure',
+        'Cinnamon — Ceylon variety',
+      ]},
+      { cat: 'Fresh Seasonings & Aromatics', items: [
+        'Fresh garlic — whole bulbs',
+        'Fresh ginger root',
+        'Fresh lemon + lime',
+        'Fresh herbs: parsley, dill, basil, cilantro',
+        'Smoked paprika',
+        'Cumin seeds or ground',
+        'Turmeric ground',
+        'Bay leaves',
+        'Dill — fresh or dried',
+      ]},
+    ]
+  },
+  walmart: {
+    label: 'Walmart',
+    sub: 'Budget basics — fill the gaps',
+    color: 'var(--amber)',
+    color2: 'var(--amber2)',
+    categories: [
+      { cat: 'Protein Basics', items: [
+        'Lean ground beef 93/7 — family pack',
+        'Whole eggs — 18 or 24 pack',
+        'Egg Beaters or store-brand egg whites — carton',
+        'Great Value 0% Greek yogurt — large tub',
+        'Canned tuna in water — Great Value case',
+        'Canned salmon — Great Value',
+        'Cottage cheese — Great Value large tub',
+      ]},
+      { cat: 'Carbs & Canned (Coach: Rice, Potatoes, Legumes, Pasta)', items: [
+        'White or jasmine rice — Great Value large bag',
+        'Pasta penne or rigatoni — Great Value',
+        'Potatoes Russet — 10lb bag (cheapest per pound anywhere)',
+        'Sweet potatoes — loose',
+        'Oatmeal rolled — Great Value large canister',
+        'Cream of rice — if not stocking at Costco',
+        'Rice cakes plain — Great Value bag',
+        'Canned black beans — case Great Value',
+        'Canned white beans — case',
+        'Canned lentils — case',
+        'Canned crushed tomatoes — Great Value case',
+        'Tomato paste — Great Value 6-pack',
+        'Canned chickpeas',
+        'Sourdough bread — Pepperidge Farm or store brand',
+      ]},
+      { cat: 'Frozen Produce', items: [
+        'Frozen green beans — Great Value large bag',
+        'Frozen spinach — multi-pack',
+        'Frozen blueberries — Great Value large bag',
+        'Frozen mixed berries',
+        'Frozen broccoli florets',
+      ]},
+      { cat: 'Dairy', items: [
+        'Whole milk — gallon',
+        'Skim milk — gallon (backup)',
+        'Greek yogurt — Great Value tub',
+      ]},
+      { cat: 'Oils & Fats', items: [
+        'Olive oil — Great Value large bottle',
+        'Avocado oil spray — for quick cooking',
+        'Natural peanut butter — Marketside or store brand',
+        'Mixed nuts — large canister',
+      ]},
+      { cat: 'Pantry Seasonings (Full Kit)', items: [
+        'Garlic powder — large shaker',
+        'Onion powder — large shaker',
+        'Smoked paprika — large shaker',
+        'Italian seasoning — large shaker',
+        'Cumin ground — large shaker',
+        'Black pepper — large grinder',
+        'Kosher salt — large box',
+        'Chili powder — large shaker',
+        'Chili flakes',
+        'Cinnamon ground',
+        'Oregano dried',
+        'Thyme dried',
+        'Cayenne pepper',
+        'Garlic salt',
+        'Everything Bagel seasoning (optional)',
+      ]},
+      { cat: 'Condiments & Pantry', items: [
+        'Honey — large bear bottle',
+        'Blackstrap molasses — Great Value jar',
+        'Low-sodium soy sauce — large bottle',
+        'Hot sauce — Frank\'s RedHot large bottle',
+        'Apple cider vinegar',
+        'Beef broth cartons — Great Value case',
+        'Dijon mustard',
+        'Coconut water — if not buying at Costco',
+        'Pomegranate juice — if not buying at Costco',
+      ]},
+      { cat: 'Campus / Emergency Backup', items: [
+        'Low-sugar protein bars — check label',
+        'Instant oats single-serve packs — for campus backup',
+        'Beef jerky low-sodium — emergency protein',
+        'Individual nut packs — campus snack',
+        'Chocolate syrup or cocoa powder — for dessert recipes',
+        'Pineapple chunks canned in juice — for snack bowls',
+      ]},
+    ]
+  }
+};
+
+let groceryChecked = JSON.parse(localStorage.getItem('groceryChecked') || '{}');
+let openStores = { costco: true, wegmans: false, walmart: false };
+
+function togGroceryStore(id) {
+  openStores[id] = !openStores[id];
+  const body = document.getElementById('gs-' + id);
+  const chev = document.getElementById('gc-' + id);
+  if (body) body.style.display = openStores[id] ? 'block' : 'none';
+  if (chev) chev.style.transform = openStores[id] ? 'rotate(90deg)' : '';
+}
+
+function togGroceryItem(key) {
+  groceryChecked[key] = !groceryChecked[key];
+  localStorage.setItem('groceryChecked', JSON.stringify(groceryChecked));
+  const cb = document.getElementById('gcb-' + key);
+  const nm = document.getElementById('gnm-' + key);
+  if (cb) cb.classList.toggle('checked', groceryChecked[key]);
+  if (nm) nm.classList.toggle('checked', groceryChecked[key]);
+  updateGroceryProgress();
+}
+
+function clearGroceryStore(storeId) {
+  Object.keys(groceryChecked).filter(k => k.startsWith(storeId + '-')).forEach(k => {
+    groceryChecked[k] = false;
+    const cb = document.getElementById('gcb-' + k);
+    const nm = document.getElementById('gnm-' + k);
+    if (cb) cb.classList.remove('checked');
+    if (nm) nm.classList.remove('checked');
+  });
+  localStorage.setItem('groceryChecked', JSON.stringify(groceryChecked));
+  updateGroceryProgress();
+}
+
+function checkAllStore(storeId) {
+  const store = GROCERY[storeId];
+  store.categories.forEach((cat, ci) => {
+    cat.items.forEach((item, ii) => {
+      const key = storeId + '-' + ci + '-' + ii;
+      groceryChecked[key] = true;
+      const cb = document.getElementById('gcb-' + key);
+      const nm = document.getElementById('gnm-' + key);
+      if (cb) cb.classList.add('checked');
+      if (nm) nm.classList.add('checked');
+    });
+  });
+  localStorage.setItem('groceryChecked', JSON.stringify(groceryChecked));
+  updateGroceryProgress();
+}
+
+function updateGroceryProgress() {
+  Object.keys(GROCERY).forEach(storeId => {
+    const store = GROCERY[storeId];
+    let total = 0, done = 0;
+    store.categories.forEach((cat, ci) => {
+      cat.items.forEach((item, ii) => {
+        total++;
+        if (groceryChecked[storeId + '-' + ci + '-' + ii]) done++;
+      });
+    });
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const bar = document.getElementById('gp-' + storeId);
+    const cnt = document.getElementById('gct-' + storeId);
+    if (bar) bar.style.width = pct + '%';
+    if (cnt) cnt.textContent = done + ' of ' + total + ' items checked';
+  });
+}
+
+function renderGrocery() {
+  document.getElementById('groceryContent').innerHTML =
+    Object.entries(GROCERY).map(([sid, store]) => {
+      const isOpen = openStores[sid];
+      const allItems = store.categories.flatMap((c, ci) =>
+        c.items.map((item, ii) => ({key: sid+'-'+ci+'-'+ii, item, checked: !!groceryChecked[sid+'-'+ci+'-'+ii]}))
+      );
+      const total = allItems.length;
+      const done = allItems.filter(x => x.checked).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+
+      const bodyHtml = store.categories.map((cat, ci) => `
+        <div class="cat-header">${cat.cat}</div>
+        ${cat.items.map((item, ii) => {
+          const key = sid + '-' + ci + '-' + ii;
+          const ck = !!groceryChecked[key];
+          return `<div class="grocery-item" onclick="togGroceryItem('${key}')">
+            <div class="grocery-cb${ck ? ' checked' : ''}" id="gcb-${key}"></div>
+            <span class="g-name${ck ? ' checked' : ''}" id="gnm-${key}">${item}</span>
+          </div>`;
+        }).join('')}
+      `).join('');
+
+      return `<div class="store-section">
+        <div class="store-header" onclick="togGroceryStore('${sid}')">
+          <div>
+            <div class="store-title" style="color:${store.color}">${store.label}</div>
+            <div class="store-sub">${store.sub}</div>
+          </div>
+          <span class="store-chev" id="gc-${sid}" style="transform:${isOpen ? 'rotate(90deg)' : ''}"">›</span>
+        </div>
+        <div class="groc-progress"><div class="groc-progress-fill" id="gp-${sid}" style="width:${pct}%"></div></div>
+        <div class="groc-count" id="gct-${sid}">${done} of ${total} items checked</div>
+        <div class="grocery-actions">
+          <button class="groc-btn" onclick="event.stopPropagation();clearGroceryStore('${sid}')">Clear</button>
+          <button class="groc-btn" onclick="event.stopPropagation();checkAllStore('${sid}')">Check all</button>
+        </div>
+        <div class="store-body" id="gs-${sid}" style="display:${isOpen ? 'block' : 'none'}">${bodyHtml}</div>
+      </div>`;
+    }).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════
+renderTrackerAll();
+renderTraining();
+renderNutrition();
+renderGrocery();
+</script>
+
+<!-- END OF DAY CALORIE LOG MODAL -->
+<div id="calLogModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:340px">
+    <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">Log calories for</div>
+    <div id="calLogDate" style="font-size:18px;font-weight:600;margin-bottom:1.25rem"></div>
+    <div style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Total calories (from Cronometer)</div>
+    <input id="calLogInput" type="number" inputmode="numeric" placeholder="e.g. 3450"
+      style="width:100%;background:var(--bg4);border:0.5px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-size:20px;color:var(--text);font-family:'DM Mono',monospace;outline:none;margin-bottom:1rem"
+      onkeydown="if(event.key==='Enter')submitCalLog()">
+    <div style="display:flex;gap:8px">
+      <button onclick="closeCalLog()" style="flex:1;padding:10px;border:0.5px solid var(--border2);border-radius:var(--radius-sm);background:none;color:var(--text2);font-size:14px;cursor:pointer">Cancel</button>
+      <button onclick="submitCalLog()" style="flex:2;padding:10px;border:none;border-radius:var(--radius-sm);background:var(--accent);color:#0e0e0f;font-size:14px;font-weight:600;cursor:pointer">Save + Sync to Sheet</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px;text-align:center;line-height:1.5">Enter your total from Cronometer, then tap save.<br>This updates today's row in your Google Sheet.</div>
+  </div>
+</div>
+
+</body>
+</html>
