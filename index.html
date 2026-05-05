@@ -380,7 +380,47 @@ function initData(){
 }
 let tData=initData();
 
-let lData=ls('liftV2',{});
+const WK1_LIFTS={
+  limbsA:{
+    squat:  [{weight:115,reps:5,done:true},{weight:125,reps:4,done:true}],
+    legExt: [{weight:160,reps:12,done:true},{weight:170,reps:10,done:true}],
+    legCrl: [{weight:140,reps:8,done:true},{weight:145,reps:6,done:true},{weight:'',reps:'',done:false}],
+    preaCl: [{weight:60,reps:10,done:true},{weight:70,reps:'',done:true}],
+    revCrl: [{weight:50,reps:12,done:true},{weight:60,reps:9,done:true}],
+    triPd:  [{weight:100,reps:8,done:true},{weight:100,reps:8,done:true},{weight:100,reps:6,done:true}],
+    calf1:  [{weight:200,reps:10,done:true},{weight:225,reps:8,done:true}],
+  },
+  torsoB:{
+    cnvPrs: [{weight:90,reps:8,done:true},{weight:95,reps:6,done:true}],
+    loFly:  [{weight:30,reps:10,done:true},{weight:30,reps:10,done:true}],
+    wgLpd:  [{weight:150,reps:7,done:true},{weight:150,reps:6,done:true},{weight:150,reps:6,done:true}],
+    tbar:   [{weight:90,reps:7,done:true},{weight:100,reps:7,done:true},{weight:100,reps:7,done:true}],
+    latRs:  [{weight:85,reps:9,done:true},{weight:85,reps:9,done:true},{weight:'',reps:'',done:false}],
+  },
+  limbsB:{
+    altCrl: [{weight:35,reps:8,done:true},{weight:35,reps:8,done:true}],
+    skull:  [{weight:70,reps:10,done:true},{weight:80,reps:5,done:true},{weight:80,reps:6,done:true}],
+    sldl:   [{weight:185,reps:'',done:true},{weight:205,reps:7,done:true}],
+    slLp:   [{weight:90,reps:8,done:true},{weight:115,reps:8,done:true}],
+    hipTh:  [{weight:115,reps:8,done:true},{weight:115,reps:8,done:true}],
+    calf2:  [{weight:115,reps:10,done:true},{weight:115,reps:10,done:true}],
+    adduct: [{weight:'',reps:'',done:false}],
+  },
+};
+let lData=ls('liftV2',null);
+if(!lData){
+  lData={};
+  // seed week 1 lifts
+  Object.entries(WK1_LIFTS).forEach(([sid,exMap])=>{
+    if(!lData[0])lData[0]={};
+    lData[0][sid]={};
+    Object.entries(exMap).forEach(([eid,sets])=>{
+      lData[0][sid][eid]={};
+      sets.forEach((s,i)=>lData[0][sid][eid][i]=s);
+    });
+  });
+  ss('liftV2',lData);
+}
 function getLift(wk,sid,eid,si){return lData?.[wk]?.[sid]?.[eid]?.[si]||{weight:'',reps:'',done:false}}
 function setLift(wk,sid,eid,si,f,v){
   if(!lData[wk])lData[wk]={};
@@ -463,7 +503,7 @@ function renderMetrics(){
     <div class="m-card"><div class="m-label">Steps</div><div class="m-val">${totS}</div><div class="m-unit">total</div></div>
     <div class="m-card"><div class="m-label">Logged</div><div class="m-val">${wk.filter(d=>d.weight||d.cal||d.steps).length}</div><div class="m-unit">of 7 days</div></div>
     <div class="m-card"><div class="m-label">Vol lb</div><div class="m-val" style="color:var(--teal)">${wVol?wVol.toLocaleString():'—'}</div><div class="m-unit">week</div></div>
-    <div class="m-card"><div class="m-label">Target</div><div class="m-val" style="color:var(--accent);font-size:13px">2820/2455</div><div class="m-unit">tr/off kcal</div></div>`;
+    <div class="m-card"><div class="m-label">Target</div><div class="m-val" style="color:var(--accent);font-size:13px">2900/2000</div><div class="m-unit">tr/off kcal</div></div>`;
 }
 
 function renderTargets(){
@@ -631,8 +671,11 @@ const RECIPES={
     {name:'Intra-Workout Formula',when:'Sip throughout training session',macros:{cal:236,p:13,c:48,f:2},ingredients:[['Karbolyn or HBCD','25g'],['Coconut water','500ml'],['EAA powder','10g']],note:'50/50 carb split between Karbolyn and coconut water carbs. Coconut water covers intra potassium. Sip steadily — do not chug.'},
   ],
   post:[
-    {name:'Milk & Cereal Post-Workout',when:'Within 30 min after training',macros:{cal:974,p:25,c:184,f:17},ingredients:[['Corn Flakes (non-fortified)','120g'],['Whole milk','500ml'],['Mixed berries','100g'],['Blackstrap molasses','15g'],['Honey','42g']],note:"Coach's go-to post-workout. Whole milk covers calcium. Add extra cereal to push toward 170g carb target if needed."},
-    {name:'Cream of Rice Power Bowl',when:'Within 30 min after training',macros:{cal:927,p:40,c:171,f:12},ingredients:[['Cream of rice (dry)','100g'],['Whole milk','300ml'],['Whey protein','25g'],['Blackstrap molasses','15g'],['Banana','1 medium'],['Honey','42g']],note:'Cook cream of rice in milk instead of water for extra calories. Stir whey in after cooking off heat to avoid clumping.'},
+    {name:'Milk & Cereal Post-Workout',when:'Within 30 min · Home / dorm',macros:{cal:974,p:25,c:184,f:17},ingredients:[['Corn Flakes (non-fortified)','120g'],['Whole milk','500ml'],['Mixed berries','100g'],['Blackstrap molasses','15g'],['Honey','42g']],note:"Coach's go-to post-workout. Whole milk covers calcium. Add extra cereal to push toward carb target if needed."},
+    {name:'Cream of Rice Power Bowl',when:'Within 30 min · Home / dorm',macros:{cal:927,p:40,c:171,f:12},ingredients:[['Cream of rice (dry)','100g'],['Whole milk','300ml'],['Whey protein','25g'],['Blackstrap molasses','15g'],['Banana','1 medium'],['Honey','42g']],note:'Cook cream of rice in milk instead of water for extra calories. Stir whey in after cooking off heat to avoid clumping.'},
+    {name:'Gym Bag Shaker & Rice Cakes',when:'Within 30 min · At the gym — easiest option',macros:{cal:680,p:50,c:98,f:8},ingredients:[['Whey protein','2 scoops / 60g'],['Water or coconut water','500ml'],['Rice cakes plain','4 cakes / 36g'],['Honey packets','2 packets (~20g)'],['Banana','1 medium'],['Blackstrap molasses','1 small travel bottle squeeze']],note:'Pack the night before. Shaker + rice cakes in a zip bag + banana + honey packets fits in any gym bag. Mix the shake at the gym, eat everything within 30 min of finishing. Coconut water instead of water adds potassium and tastes better post-workout.'},
+    {name:'Dry Cereal & Protein Shaker',when:'Within 30 min · At the gym — no fridge needed',macros:{cal:720,p:48,c:114,f:6},ingredients:[['Whey protein','2 scoops / 60g'],['Water','500ml'],['Corn Flakes (non-fortified)','100g in zip bag'],['Honey packets','2 packets (~20g)'],['Blackstrap molasses','1 squeeze travel bottle']],note:'Corn Flakes eaten dry straight from the bag — no bowl, no milk needed. Shake the protein, eat the cereal alongside. Honey packets and a small travel molasses bottle finish it off. Whole thing fits in a gallon zip bag.'},
+    {name:'Banana & Gummy Bear Shake',when:'Within 30 min · At the gym — fastest option',macros:{cal:580,p:46,c:82,f:4},ingredients:[['Whey protein','2 scoops / 60g'],['Water or coconut water','500ml'],['Banana','1 large'],['Gummy bears','50g (fast sugar)'],['Honey packet','1 packet (~10g)']],note:'Gummy bears are pure dextrose — one of the fastest absorbing carbs you can eat post-workout. Banana + honey covers the rest. Shake + eat on the way to the car. Zero prep, zero mess.'},
   ],
 };
 
@@ -738,14 +781,14 @@ function renderNutrition(){
 
   // Supplements
   const supps=[
-    {n:'Thorne AM/PM Multi',d:'as directed',c:'var(--accent)'},
-    {n:'Carlsons EPA + DHA',d:'1 each preworkout',c:'var(--blue)'},
+    {n:'Thorne AM/PM Multi or Nutrabio Multisport',d:'as directed',c:'var(--accent)'},
+    {n:'Carlsons EPA + DHA Gems',d:'1 each preworkout or anytime off days',c:'var(--blue)'},
     {n:'Vitamin D3/K2',d:'5,000 IU daily',c:'var(--amber)'},
-    {n:'R-ALA',d:'300mg daily',c:'var(--teal)'},
+    {n:'R-ALA',d:'300mg preworkout or morning off day',c:'var(--teal)'},
     {n:'Alpha GPC',d:'600mg preworkout',c:'var(--accent)'},
     {n:'CoQ-10',d:'200mg daily',c:'var(--blue)'},
-    {n:'NAC',d:'600mg 2x daily',c:'var(--amber)'},
-    {n:'Magnesium',d:'700–800mg nightly',c:'var(--teal)'},
+    {n:'NAC',d:'600mg 2x daily — preferably empty stomach',c:'var(--amber)'},
+    {n:'Magnesium of choice',d:'700–800mg nightly',c:'var(--teal)'},
   ];
   const suppHtml=`
     <div class="section-label">Supplements</div>
